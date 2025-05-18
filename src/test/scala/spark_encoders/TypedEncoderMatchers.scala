@@ -1,6 +1,6 @@
 package spark_encoders
 
-import auto.typedEncoderToEncoder
+import TypedEncoder.typedEncoderToEncoder
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.internal.SQLConf
@@ -59,13 +59,13 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
           SQLConf.CODEGEN_FACTORY_MODE.key,
           codegen.toString)
         def checkPure = for {
-          bytes <- pureSerialize(input)
+          bytes        <- pureSerialize(input)
           deserialized <- pureDeserialize(bytes)
-          result <- checkEquals(input, deserialized)
+          result       <- checkEquals(input, deserialized)
         } yield result
         def checkDataset = for {
           deserialized <- workInDataset(input)
-          result <- checkEquals(input, deserialized)
+          result       <- checkEquals(input, deserialized)
         } yield result
         def result = for {
           _ <- if (pure) checkPure.left.map(err => s"MODE=PURE: $err") else Right(())
@@ -108,11 +108,7 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
   def beInstanceOf[A: ClassTag]: Matcher[A] =
     input => {
       MatchResult(
-        matches = {
-          println(input.getClass + " is instance of " + classTag[A].runtimeClass + " = " + classTag[
-            A].runtimeClass.isAssignableFrom(input.getClass))
-          classTag[A].runtimeClass.isAssignableFrom(input.getClass)
-        },
+        matches = classTag[A].runtimeClass.isAssignableFrom(input.getClass),
         rawFailureMessage =
           s"Class ${input.getClass.getCanonicalName} is not instance of ${classTag[A].runtimeClass.getCanonicalName}",
         rawNegatedFailureMessage =

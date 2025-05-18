@@ -52,7 +52,6 @@ case class ClassSimpleName(child: Expression, stripDollar: Boolean = true)
            $classNameCode
            ${ev.value} = org.apache.spark.unsafe.types.UTF8String.fromString($className);
          }
-         System.out.println("ClassSimpleName=" + ${ev.value});
          """
     ev.copy(code = inputObject.code + code)
   }

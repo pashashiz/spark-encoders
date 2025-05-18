@@ -1,9 +1,6 @@
 package spark_encoders
 
 import org.apache.spark.SparkException
-import org.apache.spark.sql.Encoder
-import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
-import spark_encoders.auto._
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types._
 import org.scalatest.Inside.inside
@@ -16,7 +13,8 @@ import java.time.{Duration, Instant, LocalDate, LocalDateTime, OffsetDateTime, P
 import java.util.UUID
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with SampleEncoders {
+class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with SampleEncoders
+    with TypedEncoderImplicits {
 
   "TypedEncoder" when {
 
@@ -126,12 +124,12 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "support OffsetDateTime" in {
         OffsetDateTime.parse("2025-04-02T22:08:01.855+03:00") should
-        haveTypedEncoder[OffsetDateTime]()
+          haveTypedEncoder[OffsetDateTime]()
       }
 
       "support ZonedDateTime" in {
         ZonedDateTime.parse("2025-04-02T22:19:30.498+03:00[Europe/Kiev]") should
-        haveTypedEncoder[ZonedDateTime]()
+          haveTypedEncoder[ZonedDateTime]()
       }
 
       "support Java Duration" in {
@@ -206,7 +204,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
             nullable = true)))
         TypedEncoder[SimpleTaskOptUser].catalystRepr shouldBe schema
         SimpleTaskOptUser("t1", Some(SimpleUser("Pablo", 34))) should
-        haveTypedEncoder[SimpleTaskOptUser]()
+          haveTypedEncoder[SimpleTaskOptUser]()
         SimpleTaskOptUser("t1", None) should haveTypedEncoder[SimpleTaskOptUser]()
       }
 
@@ -261,7 +259,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
         (WorkItem.Feature("My feature", 1): WorkItem) should haveTypedEncoder[WorkItem]()
       }
 
-      "support sub types with all same fields" in {
+      "support sub types with all different fields" in {
         val schema = StructType(Seq(
           StructField("_type", StringType, nullable = false),
           StructField("description", StringType, nullable = true),
@@ -348,10 +346,8 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "fail with sub types that have same field of different type" in {
         // note: ideally code should not compile with this error, need to write out own macro
-        the[SparkException].thrownBy {
-          TypedEncoder[WorkItemDiffType]
-        } should have message
-        "[INTERNAL_ERROR] Standard ADT encoder does not support subtypes that have same field names with different types. Field 'size' has conflicting types: IntegerType, FloatType"
+        the[SparkException].thrownBy(TypedEncoder[WorkItemDiffType]).getMessage shouldBe
+          "[INTERNAL_ERROR] Standard ADT encoder does not support subtypes that have same field names with different types. Field 'size' has conflicting types: IntegerType, FloatType"
       }
 
       "support nested enums via case objects encoded as string" in {
@@ -672,7 +668,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
         val sample = Container(Array(SimpleUser("Pablo", 34), SimpleUser("Bob", 18)))
         sample should haveTypedEncoder[Container[Array[SimpleUser]]](assertion =
           (original, deserialized) => {
-            deserialized.value should beInstanceOf[Array[_]]
+            deserialized.value.asInstanceOf[Array[Object]] should beInstanceOf[Array[Object]]
             original.value shouldBe deserialized.value
           })
       }
@@ -681,7 +677,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
         val sample = Container(Array(1, 2, 3))
         sample should haveTypedEncoder[Container[Array[Int]]](assertion =
           (original, deserialized) => {
-            deserialized.value should beInstanceOf[Array[_]]
+            deserialized.value should beInstanceOf[Array[Int]]
             original.value shouldBe deserialized.value
           })
       }
@@ -690,7 +686,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
         val sample = Container(Array(1.toByte, 2.toByte, 3.toByte))
         sample should haveTypedEncoder[Container[Array[Byte]]](assertion =
           (original, deserialized) => {
-            deserialized.value should beInstanceOf[Array[_]]
+            deserialized.value should beInstanceOf[Array[Byte]]
             original.value shouldBe deserialized.value
           })
       }

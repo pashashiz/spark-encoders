@@ -1,8 +1,7 @@
 package spark_encoders
 
-import auto._
+import spark_encoders.TypedEncoder._
 import org.apache.spark.sql.catalyst.util.{ArrayData, GenericArrayData}
-import org.apache.spark.sql.test.ExamplePoint
 import org.apache.spark.sql.types.{ArrayType, DataType, DoubleType, SQLUserDefinedType, UserDefinedType}
 
 case class Container[A](value: A)
@@ -116,6 +115,8 @@ trait SampleEncoders {
   implicit def workItemEncoder: TypedEncoder[WorkItem] = genTypedEncoder[WorkItem]
   implicit def workItemDiffTypeEncoder: TypedEncoder[WorkItemDiffType] =
     genTypedEncoder[WorkItemDiffType]
+  implicit def workItemDiffFieldsEncoder: TypedEncoder[WorkItemDiffFields] =
+    genTypedEncoder[WorkItemDiffFields]
   implicit def workItemMixedOptEncoder: TypedEncoder[WorkItemOpt] = genTypedEncoder[WorkItemOpt]
   implicit def prEncoder: TypedEncoder[PR] = genTypedEncoder[PR]
   implicit def prOptEncoder: TypedEncoder[PROpt] = genTypedEncoder[PROpt]
@@ -127,4 +128,11 @@ trait SampleEncoders {
   implicit def emptyCaseClassEncoder: TypedEncoder[EmptyCaseClass] = genTypedEncoder[EmptyCaseClass]
   implicit def emptyCaseObjectEncoder: TypedEncoder[EmptyCaseObject.type] =
     genTypedEncoder[EmptyCaseObject.type]
+    
+  implicit def containerArraySimpleUserEncoder: TypedEncoder[Container[Array[SimpleUser]]] = 
+    genTypedEncoder[Container[Array[SimpleUser]]]
+  implicit def containerArrayIntEncoder: TypedEncoder[Container[Array[Int]]] =
+    genTypedEncoder[Container[Array[Int]]]
+  implicit def containerArrayByte: TypedEncoder[Container[Array[Byte]]] =
+    genTypedEncoder[Container[Array[Byte]]]
 }
