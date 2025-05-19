@@ -102,37 +102,37 @@ class PointUDT extends UserDefinedType[Point] {
 
 trait SampleEncoders {
   implicit def containerEncoder[A: TypedEncoder]: TypedEncoder[Container[A]] =
-    genTypedEncoder[Container[A]]
-  implicit def simpleUserEncoder: TypedEncoder[SimpleUser] = genTypedEncoder[SimpleUser]
+    derive[Container[A]]
+  implicit def simpleUserEncoder: TypedEncoder[SimpleUser] = derive[SimpleUser]
   implicit def simpleUserAsTupleEncoder: TypedEncoder[(String, Int)] =
-    genTypedEncoder[(String, Int)]
-  implicit def userOptAgeEncoder: TypedEncoder[UserOptAge] = genTypedEncoder[UserOptAge]
-  implicit def userOptNameEncoder: TypedEncoder[UserOptName] = genTypedEncoder[UserOptName]
-  implicit def userOptBothEncoder: TypedEncoder[UserOptBoth] = genTypedEncoder[UserOptBoth]
-  implicit def simpleTaskEncoder: TypedEncoder[SimpleTask] = genTypedEncoder[SimpleTask]
+    derive[(String, Int)]
+  implicit def userOptAgeEncoder: TypedEncoder[UserOptAge] = derive[UserOptAge]
+  implicit def userOptNameEncoder: TypedEncoder[UserOptName] = derive[UserOptName]
+  implicit def userOptBothEncoder: TypedEncoder[UserOptBoth] = derive[UserOptBoth]
+  implicit def simpleTaskEncoder: TypedEncoder[SimpleTask] = derive[SimpleTask]
   implicit def simpleTaskOptUserEncoder: TypedEncoder[SimpleTaskOptUser] =
-    genTypedEncoder[SimpleTaskOptUser]
-  implicit def workItemEncoder: TypedEncoder[WorkItem] = genTypedEncoder[WorkItem]
+    derive[SimpleTaskOptUser]
+  implicit def workItemEncoder: TypedEncoder[WorkItem] = derive[WorkItem]
   implicit def workItemDiffTypeEncoder: TypedEncoder[WorkItemDiffType] =
-    genTypedEncoder[WorkItemDiffType]
+    derive[WorkItemDiffType]
   implicit def workItemDiffFieldsEncoder: TypedEncoder[WorkItemDiffFields] =
-    genTypedEncoder[WorkItemDiffFields]
-  implicit def workItemMixedOptEncoder: TypedEncoder[WorkItemOpt] = genTypedEncoder[WorkItemOpt]
-  implicit def prEncoder: TypedEncoder[PR] = genTypedEncoder[PR]
-  implicit def prOptEncoder: TypedEncoder[PROpt] = genTypedEncoder[PROpt]
-  implicit def nestedEnumEncoder: TypedEncoder[NestedEnum] = genTypedEncoder[NestedEnum]
-  implicit def flatEnumEncoder: TypedEncoder[FlatEnum] = genTypedEncoder[FlatEnum]
+    derive[WorkItemDiffFields]
+  implicit def workItemMixedOptEncoder: TypedEncoder[WorkItemOpt] = derive[WorkItemOpt]
+  implicit def prEncoder: TypedEncoder[PR] = derive[PR]
+  implicit def prOptEncoder: TypedEncoder[PROpt] = derive[PROpt]
+  implicit def nestedEnumEncoder: TypedEncoder[NestedEnum] = derive[NestedEnum]
+  implicit def flatEnumEncoder: TypedEncoder[FlatEnum] = derive[FlatEnum]
   implicit def userAttributeEncoder: TypedEncoder[UserAttribute] =
-    genTypedEncoder[UserAttribute]
-  implicit def errorEncoder: TypedEncoder[Error] = genTypedEncoder[Error]
-  implicit def emptyCaseClassEncoder: TypedEncoder[EmptyCaseClass] = genTypedEncoder[EmptyCaseClass]
+    derive[UserAttribute]
+  implicit def errorEncoder: TypedEncoder[Error] = derive[Error]
+  implicit def emptyCaseClassEncoder: TypedEncoder[EmptyCaseClass] = derive[EmptyCaseClass]
   implicit def emptyCaseObjectEncoder: TypedEncoder[EmptyCaseObject.type] =
-    genTypedEncoder[EmptyCaseObject.type]
+    derive[EmptyCaseObject.type]
     
   implicit def containerArraySimpleUserEncoder: TypedEncoder[Container[Array[SimpleUser]]] = 
-    genTypedEncoder[Container[Array[SimpleUser]]]
+    derive[Container[Array[SimpleUser]]]
   implicit def containerArrayIntEncoder: TypedEncoder[Container[Array[Int]]] =
-    genTypedEncoder[Container[Array[Int]]]
+    derive[Container[Array[Int]]]
   implicit def containerArrayByte: TypedEncoder[Container[Array[Byte]]] =
-    genTypedEncoder[Container[Array[Byte]]]
+    derive[Container[Array[Byte]]]
 }

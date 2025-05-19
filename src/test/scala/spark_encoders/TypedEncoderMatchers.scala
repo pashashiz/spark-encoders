@@ -42,8 +42,8 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
     def workInDataset(input: A): Either[String, A] =
       Try {
         val ds = spark.createDataset(List(input))
-        ds.printSchema()
-        ds.show(truncate = false)
+        // ds.printSchema()
+        // ds.show(truncate = false)
         ds.map(identity).collect().head
       }.toEither.left.map { e =>
         e.printStackTrace()

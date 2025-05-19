@@ -389,7 +389,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "support Try via LightException" in {
         implicit val leEncoder: TypedEncoder[Throwable] = lightExceptionEncoder
-        implicit val tryEncoder: TypedEncoder[Try[SimpleUser]] = genTypedEncoder[Try[SimpleUser]]
+        implicit val tryEncoder: TypedEncoder[Try[SimpleUser]] = derive[Try[SimpleUser]]
         Try(SimpleUser("Pavlo", 35)) should haveTypedEncoder[Try[SimpleUser]]()
         Try[SimpleUser](throw new RuntimeException("Oops!")) should haveTypedEncoder[
           Try[SimpleUser]](assertion = (_, deserialized) => {
@@ -430,8 +430,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
       "support UDT" in {
         implicit val pointUdt: PointUDT = new PointUDT()
         val ds = spark.createDataset(Seq(Point(1, 2), Point(3, 4)))
-        ds.show()
-        succeed
+        ds.collect().toList shouldBe List(Point(1, 2), Point(3, 4))
       }
     }
 

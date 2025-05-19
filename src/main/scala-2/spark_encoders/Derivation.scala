@@ -11,5 +11,5 @@ trait Derivation {
   type Typeclass[T] = TypedEncoder[T]
   def join[A: ClassTag](ctx: CaseClass[TypedEncoder, A]): TypedEncoder[A] = ProductEncoder[A](ctx)
   def split[A: ClassTag](ctx: SealedTrait[TypedEncoder, A]): TypedEncoder[A] = ADTEncoder[A](ctx)
-  implicit def genTypedEncoder[T]: TypedEncoder[T] = macro Magnolia.gen[T]
+  implicit def derive[T]: TypedEncoder[T] = macro Magnolia.gen[T]
 }

@@ -9,8 +9,12 @@ lazy val root = (project in file("."))
     name := "spark-encoders",
     libraryDependencies ++= Seq(
       ("org.apache.spark" %% "spark-sql" % "3.5.5").cross(CrossVersion.for3Use2_13),
-      "org.scalatest" %% "scalatest" % "3.2.19" % Test exclude("org.scala-lang.modules", "scala-xml_3")),
-    libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, _)) => Seq("com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.10")
-      case _ => Seq.empty
-    }))
+      "org.scalatest" %% "scalatest" % "3.2.19" % Test exclude (
+        "org.scala-lang.modules",
+        "scala-xml_3")),
+    libraryDependencies ++= (
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) => Seq("com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.10")
+        case _            => Seq.empty
+      }),
+      Test / parallelExecution := false)

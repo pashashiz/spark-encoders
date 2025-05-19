@@ -8,9 +8,9 @@ import scala.deriving._
 trait Derivation {
 
   inline given derived[A](using m: Mirror.Of[A], classTag: ClassTag[A]): TypedEncoder[A] =
-    genTypedEncoder
+    derive
 
-  inline def genTypedEncoder[T](using m: Mirror.Of[T], classTag: ClassTag[T]): TypedEncoder[T] = {
+  inline def derive[T](using m: Mirror.Of[T], classTag: ClassTag[T]): TypedEncoder[T] = {
     lazy val elemInstances = summonInstances[T, m.MirroredElemTypes]
     val labels = constValueList[m.MirroredElemLabels]
     inline m match {
@@ -30,15 +30,15 @@ trait Derivation {
       case _: EmptyTuple     => Nil
       case _: (head *: tail) => deriveOrSummon[T, head] :: summonInstances[T, tail]
 
-  inline def deriveOrSummon[T, Elem]: TypedEncoder[Elem] =
+  private inline def deriveOrSummon[T, Elem]: TypedEncoder[Elem] =
     inline erasedValue[Elem] match
       case _: T => deriveRec[T, Elem]
       case _    => summonInline[TypedEncoder[Elem]]
 
-  inline def deriveRec[T, Elem]: TypedEncoder[Elem] =
+  private inline def deriveRec[T, Elem]: TypedEncoder[Elem] =
     inline erasedValue[T] match
       case _: Elem => error("infinite recursive derivation")
-      case _ => Derivation.genTypedEncoder[Elem](using
+      case _ => Derivation.derive[Elem](using
           summonInline[Mirror.Of[Elem]],
           summonInline[ClassTag[Elem]])
 
