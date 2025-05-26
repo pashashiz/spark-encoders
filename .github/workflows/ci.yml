@@ -1,0 +1,30 @@
+name: Spark Encoders
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04 ]
+        java: [ 8 ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Cache SBT deps
+        uses: coursier/cache-action@v6
+      - name: Setup Scala with SBT
+        uses: coursier/setup-action@v1
+        with:
+          jvm: temurin:${{ matrix.java }}
+          apps: sbt
+      - name: Run tests
+        run: sbt -v "+ test"
