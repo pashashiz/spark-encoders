@@ -1,9 +1,6 @@
 First Stage Left:
 
-- scala 3 support
-- push to github
 - add readme
-- add ci
 - publish to maven 0.1.0
 
 Next Stages:
