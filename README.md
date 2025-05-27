@@ -56,8 +56,9 @@ types. However, this approach has significant limitations:
     - Dependency on shapeless.
 2. [spark-scala3](https://vincenzobaz.github.io/spark-scala3/). Nice PoC to show that Scala 3 can be used with Spark,
    but:
-    - No Scala 3 support.
+    - No Scala 2 support.
     - No ADT support.
+    - Inherits most of the Spark existing encoder issues.
 
 ## User Guide
 
