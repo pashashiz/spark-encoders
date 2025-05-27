@@ -8,7 +8,7 @@ inThisBuild(List(
     Developer(
       id = "pashashiz",
       name = "Pavlo Pohrebnyi",
-      email = "your@pogrebnij@gmail.com",
+      email = "pogrebnij@gmail.com",
       url = url("https://github.com/pashashiz"))),
   sonatypeCredentialHost := "s01.oss.sonatype.org",
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local"))
