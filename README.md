@@ -43,6 +43,21 @@ types. However, this approach has significant limitations:
   `ZonedDateTime`.
 * **Lack of fine-grained control:** There's no built-in way to specify that only *certain* types within a complex
   structure should be serialized using an alternative method like Kryo, while others use Catalyst.
+* **No Scala 3 support:** There is no `TypeTag` in Scala 3 hence Spark cannot derive `Encoder` by itself.
+
+## Alternatives
+
+1. [Frameless](https://github.com/typelevel/frameless). Awesome library that makes Spark more type safe. It also has its
+   own compile type `Encoder` derivation. However, there are few pain points:
+    - We cannot just use a regular Spark API and benefit from compile time encoders. We have to use a type-safe wrapper
+      witch might be an overkill for many teams.
+    - No Scala 3 support.
+    - No ADT support.
+    - Dependency on shapeless.
+2. [spark-scala3](https://vincenzobaz.github.io/spark-scala3/). Nice PoC to show that Scala 3 can be used with Spark,
+   but:
+    - No Scala 3 support.
+    - No ADT support.
 
 ## User Guide
 
@@ -282,9 +297,9 @@ place an instance of the `UserDefinedType` in the implicit scope.
 Given the standard Spark UDT definition:
 
 ```scala
-import org.apache.spark.sql.types.{UserDefinedType, DataType, ArrayType, DoubleType} 
-import org.apache.spark.sql.catalyst.util.{ArrayData, GenericArrayData} 
-import org.apache.spark.annotation.SQLUserDefinedType 
+import org.apache.spark.sql.types.{UserDefinedType, DataType, ArrayType, DoubleType}
+import org.apache.spark.sql.catalyst.util.{ArrayData, GenericArrayData}
+import org.apache.spark.annotation.SQLUserDefinedType
 
 @SQLUserDefinedType(udt = classOf[PointUDT])
 case class Point(x: Double, y: Double)
@@ -304,6 +319,7 @@ class PointUDT extends UserDefinedType[Point] {
 ```
 
 To use `Point` with the library's encoder derivation:
+
 ```scala
 // Place UDT instance in implicit scope
 implicit val pointUdt: PointUDT = new PointUDT()
@@ -365,7 +381,8 @@ object MyApp {
     // Now User encoder is available via MyAppEncoders._
     spark.createDataset(Seq(User("Pavlo", 35), User("Randy", 45))).show(false)
     // Same for Item, etc.
-    spark.createDataset[Item](...).show(false) // Item encoder is also available
+    spark.createDataset[Item](
+  ...).show(false) // Item encoder is also available
   }
 }
 ```
