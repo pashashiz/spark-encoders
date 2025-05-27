@@ -13,11 +13,19 @@ inThisBuild(List(
   sonatypeCredentialHost := "s01.oss.sonatype.org",
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local"))
 
+lazy val providedAsRunnable = Seq(
+  Compile / run := Defaults
+    .runTask(Compile / fullClasspath, Compile / run / mainClass, Compile / run / runner)
+    .evaluated,
+  Compile / runMain := Defaults
+    .runMainTask(Compile / fullClasspath, Compile / run / runner)
+    .evaluated)
+
 lazy val root = (project in file("."))
   .settings(
     name := "spark-encoders",
     libraryDependencies ++= Seq(
-      ("org.apache.spark" %% "spark-sql" % "3.5.5").cross(CrossVersion.for3Use2_13),
+      ("org.apache.spark" %% "spark-sql" % "3.5.5" % Provided).cross(CrossVersion.for3Use2_13),
       "org.scalatest" %% "scalatest" % "3.2.19" % Test exclude (
         "org.scala-lang.modules",
         "scala-xml_3")),
@@ -26,4 +34,5 @@ lazy val root = (project in file("."))
         case Some((2, _)) => Seq("com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.10")
         case _            => Seq.empty
       }),
-    Test / parallelExecution := false)
+    Test / parallelExecution := false,
+    providedAsRunnable)
