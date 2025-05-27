@@ -25,7 +25,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "spark-encoders",
     libraryDependencies ++= Seq(
-      ("org.apache.spark" %% "spark-sql" % "3.5.5").cross(CrossVersion.for3Use2_13),
+      ("org.apache.spark" %% "spark-sql" % "3.5.5" % Provided).cross(CrossVersion.for3Use2_13),
       "org.scalatest" %% "scalatest" % "3.2.19" % Test exclude (
         "org.scala-lang.modules",
         "scala-xml_3")),
