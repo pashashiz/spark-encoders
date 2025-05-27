@@ -25,19 +25,18 @@ case class Altitude(value: Double)
 object UsersGuide {
   def main(args: Array[String]): Unit = {
     val spark = LocalSpark().create
-//    spark.createDataset(Seq(User("Pavlo", 35), User("Randy", 45))).show(false)
-//    spark.createDataset[Item](
-//      Seq(Item.Defect("d1", 100), Item.Feature("f1", 1), Item.Story("s1", 3)))
-//      .show(false)
+    spark.createDataset(Seq(User("Pavlo", 35), User("Randy", 45))).show(false)
+    spark.createDataset[Item](
+      Seq(Item.Defect("d1", 100), Item.Feature("f1", 1), Item.Story("s1", 3)))
+      .show(false)
     spark.createDataset[Color](
       Seq(Color.Red, Color.Green, Color.Blue))
       .show(false)
-//    spark.createDataset[Either[String, User]](
-//      Seq(Right(User("Pavlo", 35)), Left("Oops")))
-//      .show()
-//    implicit val altTE: TypedEncoder[Altitude] = xmap[Altitude, Double](_.value)(Altitude.apply)
-//    spark.createDataset(Seq(Altitude(100), Altitude(132))).show(false)
-
+    spark.createDataset[Either[String, User]](
+      Seq(Right(User("Pavlo", 35)), Left("Oops")))
+      .show()
+    implicit val altTE: TypedEncoder[Altitude] = xmap[Altitude, Double](_.value)(Altitude.apply)
+    spark.createDataset(Seq(Altitude(100), Altitude(132))).show(false)
     spark.close()
   }
 }
