@@ -7,16 +7,16 @@ sealed trait EitherStruct[+A, +B] extends Product with Serializable {
 }
 
 object EitherStruct {
-  case class LeftSide[+A, +B](left: A) extends EitherStruct[A, B] {
-    override def toEither: Either[A, B] = Left(left)
+  case class Left[+A, +B](left: A) extends EitherStruct[A, B] {
+    override def toEither: Either[A, B] = scala.util.Left(left)
   }
-  case class RightSide[+A, +B](right: B) extends EitherStruct[A, B] {
-    override def toEither: Either[A, B] = Right(right)
+  case class Right[+A, +B](right: B) extends EitherStruct[A, B] {
+    override def toEither: Either[A, B] = scala.util.Right(right)
   }
   def fromEither[A, B](either: Either[A, B]): EitherStruct[A, B] =
     either match {
-      case Left(value)  => LeftSide(value)
-      case Right(value) => RightSide(value)
+      case scala.util.Left(value)  => Left(value)
+      case scala.util.Right(value) => Right(value)
     }
 }
 

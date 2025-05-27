@@ -430,6 +430,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
       "support UDT" in {
         implicit val pointUdt: PointUDT = new PointUDT()
         val ds = spark.createDataset(Seq(Point(1, 2), Point(3, 4)))
+        ds.show(false)
         ds.collect().toList shouldBe List(Point(1, 2), Point(3, 4))
       }
     }
