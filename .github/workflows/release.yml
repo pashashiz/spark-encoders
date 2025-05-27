@@ -1,12 +1,8 @@
-name: Spark Encoders
-
+name: Release
 on:
-  pull_request:
-    branches: [ "main" ]
-
-permissions:
-  contents: read
-
+  push:
+    branches: [main]
+    tags: ["**"]
 jobs:
   build:
     strategy:
@@ -24,5 +20,10 @@ jobs:
         with:
           jvm: temurin:${{ matrix.java }}
           apps: sbt
-      - name: Test
-        run: sbt -v "+ test"
+      - name: Release
+        run: sbt ci-release
+        env:
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

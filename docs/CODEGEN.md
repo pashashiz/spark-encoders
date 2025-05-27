@@ -14,7 +14,7 @@ import org.apache.spark.sql.catalyst.*;
 import org.apache.spark.sql.catalyst.expressions.*;
 import org.apache.spark.sql.catalyst.expressions.codegen.UnsafeRowWriter;
 import org.apache.spark.unsafe.types.UTF8String;
-import com.github.pashashiz.sparkenc.*;
+import io.github.pashashiz.sparkenc.*;
 
 class SpecificUnsafeProjection extends UnsafeProjection {
 
@@ -117,7 +117,7 @@ class SpecificUnsafeProjection extends UnsafeProjection {
 From catalyst repr:
 
 ```java
-import com.github.pashashiz.sparkenc.UserOptAge;
+import io.github.pashashiz.sparkenc.UserOptAge;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.codegen.BaseProjection;
 import org.apache.spark.unsafe.types.UTF8String;

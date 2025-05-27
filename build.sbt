@@ -1,7 +1,17 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
-
-ThisBuild / scalaVersion := "2.12.20"
-ThisBuild / crossScalaVersions := Seq("2.12.20", "2.13.16", "3.3.6")
+inThisBuild(List(
+  scalaVersion := "2.12.20",
+  crossScalaVersions := Seq("2.12.20", "2.13.16", "3.3.6"),
+  organization := "io.github.pashashiz",
+  homepage := Some(url("https://github.com/pashashiz")),
+  licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+  developers := List(
+    Developer(
+      id = "pashashiz",
+      name = "Pavlo Pohrebnyi",
+      email = "your@pogrebnij@gmail.com",
+      url = url("https://github.com/pashashiz"))),
+  sonatypeCredentialHost := "s01.oss.sonatype.org",
+  sonatypeRepository := "https://s01.oss.sonatype.org/service/local"))
 
 lazy val root = (project in file("."))
   .settings(
@@ -16,4 +26,4 @@ lazy val root = (project in file("."))
         case Some((2, _)) => Seq("com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.10")
         case _            => Seq.empty
       }),
-      Test / parallelExecution := false)
+    Test / parallelExecution := false)
