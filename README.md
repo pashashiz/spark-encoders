@@ -51,7 +51,7 @@ types. However, this approach has significant limitations:
 Add the following library dependency using your build tool (e.g., sbt):
 
 ```scala
-libraryDependencies += "com.github.pashashiz" %% "spark-encoders" % "0.1.0" // Check latest version
+libraryDependencies += "io.github.pashashiz" %% "spark-encoders" % "0.1.0" // Check latest version
 ```
 
 ### Deriving Your First Product Encoder
@@ -69,7 +69,7 @@ To enable `Encoder` derivation for `User`, you need the necessary imports.
 Add the following import:
 
 ```scala
-import com.github.pashashiz.spark_encoders.TypedEncoder._
+import io.github.pashashiz.spark_encoders.TypedEncoder._
 ```
 
 You can then derive an `Encoder[User]` in several ways:
@@ -93,8 +93,8 @@ If you encounter derivation errors, explicitly using the `derive` method can pro
 In Scala 3, you can use the same implicit derivation pattern as in Scala 2 by importing `TypedEncoder.given`:
 
 ```scala 3
-import com.github.pashashiz.spark_encoders.TypedEncoder.*
-import com.github.pashashiz.spark_encoders.TypedEncoder.given
+import io.github.pashashiz.spark_encoders.TypedEncoder.*
+import io.github.pashashiz.spark_encoders.TypedEncoder.given
 ```
 
 Alternatively, you can use the `derives` keyword directly on your `case class` or `sealed trait`:
@@ -227,7 +227,7 @@ handle the potential exception.
 You can provide an implicit encoder for `Throwable`. For instance, one that only preserves the error message:
 
 ```scala
-import com.github.pashashiz.spark_encoders.encoders.ThrowableEncoders._ // lightExceptionEncoder is here
+import io.github.pashashiz.spark_encoders.encoders.ThrowableEncoders._ // lightExceptionEncoder is here
 
 implicit val leEncoder: TypedEncoder[Throwable] = lightExceptionEncoder
 implicit val tryEncoder: TypedEncoder[Try[SimpleUser]] = derive[Try[SimpleUser]]
@@ -236,7 +236,7 @@ implicit val tryEncoder: TypedEncoder[Try[SimpleUser]] = derive[Try[SimpleUser]]
 If you need to preserve full exception information, you can use Kryo serialization for `Throwable`:
 
 ```scala
-import com.github.pashashiz.spark_encoders.encoders.PrimitiveEncoders._ // kryo is here
+import io.github.pashashiz.spark_encoders.encoders.PrimitiveEncoders._ // kryo is here
 
 implicit val errorEncoder: TypedEncoder[Throwable] = kryo[Throwable]
 implicit val tryEncoder: TypedEncoder[Try[SimpleUser]] = derive[Try[SimpleUser]] // Try will now use Kryo for Throwable
@@ -282,6 +282,10 @@ place an instance of the `UserDefinedType` in the implicit scope.
 Given the standard Spark UDT definition:
 
 ```scala
+import org.apache.spark.sql.types.{UserDefinedType, DataType, ArrayType, DoubleType} 
+import org.apache.spark.sql.catalyst.util.{ArrayData, GenericArrayData} 
+import org.apache.spark.annotation.SQLUserDefinedType 
+
 @SQLUserDefinedType(udt = classOf[PointUDT])
 case class Point(x: Double, y: Double)
 
@@ -300,15 +304,9 @@ class PointUDT extends UserDefinedType[Point] {
 ```
 
 To use `Point` with the library's encoder derivation:
-
 ```scala
-import org.apache.spark.sql.types.{UserDefinedType, DataType, ArrayType, DoubleType} // Spark imports
-import org.apache.spark.sql.catalyst.util.{ArrayData, GenericArrayData} // Spark imports
-import org.apache.spark.annotation.SQLUserDefinedType // Spark import for annotation
-
 // Place UDT instance in implicit scope
 implicit val pointUdt: PointUDT = new PointUDT()
-
 // Encoder for Point will now be derivable automatically
 spark.createDataset(Seq(Point(1, 2), Point(3, 4))).show(false)
 ```
@@ -326,7 +324,7 @@ The output will reflect the UDT's serialization format:
 
 ### Optimizing Compilation Time and JAR Size
 
-Relying *solely* on the wildcard import (`import com.github.pashashiz.spark_encoders.TypedEncoder._`) for fully
+Relying *solely* on the wildcard import (`import io.github.pashashiz.spark_encoders.TypedEncoder._`) for fully
 automatic encoder derivation in large or complex Spark applications can sometimes impact compilation time and the size
 of the generated code/JAR.
 
@@ -342,8 +340,8 @@ Here's the recommended pattern:
 Define encoders explicitly in a trait or object:
 
 ```scala
-import com.github.pashashiz.spark_encoders.TypedEncoder._
-import org.apache.spark.sql.Encoder 
+import io.github.pashashiz.spark_encoders.TypedEncoder._
+import org.apache.spark.sql.Encoder
 
 trait MyAppEncoders {
   // Explicitly derive encoders for your main types

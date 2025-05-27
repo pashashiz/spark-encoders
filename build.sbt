@@ -1,7 +1,7 @@
 inThisBuild(List(
   scalaVersion := "2.12.20",
   crossScalaVersions := Seq("2.12.20", "2.13.16", "3.3.6"),
-  organization := "com.github.pashashiz",
+  organization := "io.github.pashashiz",
   homepage := Some(url("https://github.com/pashashiz")),
   licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
   developers := List(
