@@ -1,10 +1,13 @@
 package io.github.pashashiz.spark_encoders
 
+import org.apache.spark.sql.types.DecimalType.SYSTEM_DEFAULT
+import org.apache.spark.sql.types.{Decimal, DecimalType}
+
 import java.math.{BigDecimal => JBigDecimal, BigInteger => JBigInt}
 import java.sql.{Date, Timestamp}
 import java.time._
 import java.util.UUID
-import scala.concurrent.duration.{FiniteDuration, DurationInt}
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.util.Random
 
 class OptionEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with TypedEncoderImplicits {
@@ -82,13 +85,31 @@ class OptionEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers wit
 
       "support BigDecimal wrapped in Option" in {
         Option(BigDecimal("1943784783.989793879489340000")) should haveTypedEncoder[Option[BigDecimal]]()
-        Option(BigDecimal("19437847830000000000000000000000.989793879489340000")) should haveTypedEncoder[Option[BigDecimal]]()
+
+        // this is to make sure we test with a sufficiently big value
+        // note that we can't go over the max Decimal precision of Spark (38),
+        // unless we specify the schema explicitly
+        val tooBigDecimal = BigDecimal(Long.MaxValue) * 3
+        noException should be thrownBy Decimal(tooBigDecimal, SYSTEM_DEFAULT.precision, SYSTEM_DEFAULT.scale)
+        BigDecimal(tooBigDecimal.longValue()) should not equal tooBigDecimal
+        Option(tooBigDecimal) should haveTypedEncoder[Option[BigDecimal]]()
+
         Option.empty[BigDecimal] should haveTypedEncoder[Option[BigDecimal]]()
       }
 
       "support Java BigDecimal wrapped in Option" in {
         Option(new JBigDecimal("1943784783.989793879489340000")) should haveTypedEncoder[Option[JBigDecimal]]()
-        Option(new JBigDecimal("19437847830000000000000000000000.989793879489340000")) should haveTypedEncoder[Option[JBigDecimal]]()
+
+        // this is to make sure we test with a sufficiently big value
+        // note that we can't go over the maximum precision of DecimalType (38),
+        // unless we specify the schema explicitly
+        val tooBigDecimal = new JBigDecimal(Long.MaxValue)
+          .setScale(DecimalType.DEFAULT_SCALE)
+          .multiply(new JBigDecimal(3))
+        noException should be thrownBy Decimal(tooBigDecimal, SYSTEM_DEFAULT.precision, SYSTEM_DEFAULT.scale)
+        new JBigDecimal(tooBigDecimal.longValue()) should not equal tooBigDecimal
+        Option(tooBigDecimal) should haveTypedEncoder[Option[JBigDecimal]]()
+
         Option.empty[JBigDecimal] should haveTypedEncoder[Option[JBigDecimal]]()
       }
 
