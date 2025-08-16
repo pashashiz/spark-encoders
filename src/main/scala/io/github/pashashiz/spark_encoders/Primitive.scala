@@ -13,7 +13,6 @@ object Primitive {
 
   def isUnboxable(dt: DataType): Boolean = dt match {
     case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType | DoubleType => true
-    case _: DecimalType => false
     case _ => false
   }
 
@@ -33,6 +32,12 @@ object Primitive {
     }
   }
 
+  /** For boxed Java primitive types, we can safely take the boxed value.
+   *  However, we need to take special care with Spark data types that map
+   *  to Java primitives. For example, [[java.time.Instant]] maps to [[org.apache.spark.sql.types.TimestampType]]
+   *  which maps to Java primitive long. We can't unbox these, but Spark's
+   *  [[org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator.isPrimitiveType]] would return true.
+   */
   def unbox(expr: Expression, dataType: DataType): Expression = {
     val method =
       if (isUnboxable(dataType))
