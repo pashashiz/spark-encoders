@@ -5,13 +5,13 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types._
 import org.scalatest.Inside.inside
 
+import scala.util.{Failure, Random, Try}
+import scala.collection.{immutable, mutable}
 import java.math.{BigDecimal => JBigDecimal, BigInteger => JBigInt}
 import java.sql.{Date, Timestamp}
-import java.time._
+import java.time.{Duration, Instant, LocalDate, LocalDateTime, OffsetDateTime, Period, ZonedDateTime}
 import java.util.UUID
-import scala.collection.{immutable, mutable}
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
-import scala.util.{Failure, Random, Try}
 
 class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with SampleEncoders
     with TypedEncoderImplicits {
