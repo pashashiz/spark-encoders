@@ -5,10 +5,17 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, StaticInvoke}
 import org.apache.spark.sql.types.{ObjectType, _}
 
+
 object Primitive {
 
   def isPrimitive(dt: DataType): Boolean =
     CodeGenerator.isPrimitiveType(dt)
+
+  def isUnboxable(dt: DataType): Boolean = dt match {
+    case BooleanType | ByteType | ShortType | IntegerType | LongType | FloatType | DoubleType => true
+    case _: DecimalType => false
+    case _ => false
+  }
 
   def getClass(dt: DataType): Class[_] =
     CodeGenerator.javaClass(dt)
@@ -28,7 +35,7 @@ object Primitive {
 
   def unbox(expr: Expression, dataType: DataType): Expression = {
     val method =
-      if (isPrimitive(dataType) && dataType != TimestampType)
+      if (isUnboxable(dataType))
         Some(s"${CodeGenerator.javaType(dataType)}Value")
       else
         None
