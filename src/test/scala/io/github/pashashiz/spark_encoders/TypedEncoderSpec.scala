@@ -5,13 +5,13 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types._
 import org.scalatest.Inside.inside
 
-import scala.util.{Failure, Random, Try}
-import scala.collection.{immutable, mutable}
 import java.math.{BigDecimal => JBigDecimal, BigInteger => JBigInt}
 import java.sql.{Date, Timestamp}
-import java.time.{Duration, Instant, LocalDate, LocalDateTime, OffsetDateTime, Period, ZonedDateTime}
+import java.time._
 import java.util.UUID
+import scala.collection.{immutable, mutable}
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
+import scala.util.{Failure, Random, Try}
 
 class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with SampleEncoders
     with TypedEncoderImplicits {
@@ -378,6 +378,24 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
         case2 should haveTypedEncoder[UserAttribute]()
         val case3: UserAttribute = UserAttribute.Unknown
         case3 should haveTypedEncoder[UserAttribute]()
+      }
+
+      /**
+       * 1. [[Option[Instant]] gets processed by [[OptionEncoder.toCatalyst()]]
+       * 2. [[org.apache.spark.sql.catalyst.expressions.objects.UnwrapOption]] extracts the [[Instant]] from the [[Option]]
+       * 3. [[Primitive.unbox(unwrapped, catalystRepr)]] is called with:
+       *    - unwrapped = the [[Instant]] object
+       *    - catalystRepr = [[TimestampType]] (which is a primitive in Spark)
+       * 4. [[Primitive.isPrimitive(TimestampType)]] returns true
+       * 5. [[org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator.javaType]] converts [[TimestampType]] to [[org.apache.spark.sql.catalyst.types.PhysicalLongType]] and returns "long"
+       * 6. The method name becomes "longValue" 
+       * 7. [[org.apache.spark.sql.catalyst.expressions.objects.Invoke(instant, "longValue", TimestampType)]] is created
+       * 
+       * Note: Spark internally represents timestamps as microseconds since epoch (long values)
+       * via the PhysicalDataType mapping: TimestampType => PhysicalLongType
+       */
+      "support Instant wrapped in Option" in pendingUntilFixed {
+        Option(Instant.now()) should haveTypedEncoder[Option[Instant]]()
       }
     }
 
