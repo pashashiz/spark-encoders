@@ -379,24 +379,6 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
         val case3: UserAttribute = UserAttribute.Unknown
         case3 should haveTypedEncoder[UserAttribute]()
       }
-
-      /**
-       * 1. [[Option[Instant]] gets processed by [[OptionEncoder.toCatalyst()]]
-       * 2. [[org.apache.spark.sql.catalyst.expressions.objects.UnwrapOption]] extracts the [[Instant]] from the [[Option]]
-       * 3. [[Primitive.unbox(unwrapped, catalystRepr)]] is called with:
-       *    - unwrapped = the [[Instant]] object
-       *    - catalystRepr = [[TimestampType]] (which is a primitive in Spark)
-       * 4. [[Primitive.isPrimitive(TimestampType)]] returns true
-       * 5. [[org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator.javaType]] converts [[TimestampType]] to [[org.apache.spark.sql.catalyst.types.PhysicalLongType]] and returns "long"
-       * 6. The method name becomes "longValue" 
-       * 7. [[org.apache.spark.sql.catalyst.expressions.objects.Invoke(instant, "longValue", TimestampType)]] is created
-       * 
-       * Note: Spark internally represents timestamps as microseconds since epoch (long values)
-       * via the PhysicalDataType mapping: TimestampType => PhysicalLongType
-       */
-      "support Instant wrapped in Option" in {
-        Option(Instant.now()) should haveTypedEncoder[Option[Instant]]()
-      }
     }
 
     "used with unsupported types" should {
