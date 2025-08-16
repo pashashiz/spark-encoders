@@ -394,7 +394,7 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
        * Note: Spark internally represents timestamps as microseconds since epoch (long values)
        * via the PhysicalDataType mapping: TimestampType => PhysicalLongType
        */
-      "support Instant wrapped in Option" in pendingUntilFixed {
+      "support Instant wrapped in Option" in {
         Option(Instant.now()) should haveTypedEncoder[Option[Instant]]()
       }
     }

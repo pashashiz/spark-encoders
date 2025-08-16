@@ -28,7 +28,7 @@ object Primitive {
 
   def unbox(expr: Expression, dataType: DataType): Expression = {
     val method =
-      if (isPrimitive(dataType))
+      if (isPrimitive(dataType) && dataType != TimestampType)
         Some(s"${CodeGenerator.javaType(dataType)}Value")
       else
         None
