@@ -91,7 +91,7 @@ class OptionEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers wit
         // unless we specify the schema explicitly
         val tooBigDecimal = BigDecimal(Long.MaxValue) * 3
         noException should be thrownBy Decimal(tooBigDecimal, SYSTEM_DEFAULT.precision, SYSTEM_DEFAULT.scale)
-        BigDecimal(tooBigDecimal.longValue()) should not equal tooBigDecimal
+        BigDecimal(tooBigDecimal.longValue) should not equal tooBigDecimal
         Option(tooBigDecimal) should haveTypedEncoder[Option[BigDecimal]]()
 
         Option.empty[BigDecimal] should haveTypedEncoder[Option[BigDecimal]]()
@@ -107,7 +107,7 @@ class OptionEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers wit
           .setScale(DecimalType.DEFAULT_SCALE)
           .multiply(new JBigDecimal(3))
         noException should be thrownBy Decimal(tooBigDecimal, SYSTEM_DEFAULT.precision, SYSTEM_DEFAULT.scale)
-        new JBigDecimal(tooBigDecimal.longValue()) should not equal tooBigDecimal
+        new JBigDecimal(tooBigDecimal.longValue) should not equal tooBigDecimal
         Option(tooBigDecimal) should haveTypedEncoder[Option[JBigDecimal]]()
 
         Option.empty[JBigDecimal] should haveTypedEncoder[Option[JBigDecimal]]()
