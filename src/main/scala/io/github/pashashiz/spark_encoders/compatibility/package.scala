@@ -46,4 +46,41 @@ package object compatibility {
       )
     }
   }
+
+  /**
+   * Shim for ClosureCleaner.clean that handles different method signatures across Spark versions.
+   * Databricks often backports changes, so method signatures may vary between versions.
+   */
+  def closureCleanerClean(
+    closure: AnyRef,
+    checkSerializable: Boolean = true,
+    cleanTransitively: Boolean = true
+  ): Unit = {
+    try {
+      // Try to get the ClosureCleaner companion object and clean method via reflection
+      val closureCleanerClass = Class.forName("org.apache.spark.util.ClosureCleaner$")
+      val companionObject = closureCleanerClass.getField("MODULE$").get(null)
+      
+      // Try different method signatures to handle version compatibility
+      val methods = closureCleanerClass.getDeclaredMethods.filter(_.getName == "clean")
+      
+      val method = methods.find { m =>
+        val paramTypes = m.getParameterTypes
+        paramTypes.length == 3 &&
+        paramTypes(0) == classOf[AnyRef] &&
+        paramTypes(1) == classOf[Boolean] &&
+        paramTypes(2) == classOf[Boolean]
+      }.getOrElse {
+        // Fallback to first clean method if exact signature not found
+        methods.head
+      }
+      
+      method.setAccessible(true)
+      method.invoke(companionObject, closure, Boolean.box(checkSerializable), Boolean.box(cleanTransitively))
+    } catch {
+      case e: Exception =>
+        // If reflection fails, throw the original exception since ClosureCleaner is package-private
+        throw new RuntimeException(s"Failed to access ClosureCleaner.clean via reflection: ${e.getMessage}", e)
+    }
+  }
 }

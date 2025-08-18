@@ -15,5 +15,5 @@ object PrivateClosureCleaner {
       closure: AnyRef,
       checkSerializable: Boolean = true,
       cleanTransitively: Boolean = true): Unit =
-    ClosureCleaner.clean(closure, checkSerializable, cleanTransitively)
+    _root_.io.github.pashashiz.spark_encoders.compatibility.closureCleanerClean(closure, checkSerializable, cleanTransitively)
 }
