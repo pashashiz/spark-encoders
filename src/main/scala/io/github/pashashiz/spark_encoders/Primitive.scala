@@ -1,9 +1,10 @@
 package io.github.pashashiz.spark_encoders
 
+import io.github.pashashiz.spark_encoders.compatibility.staticInvoke
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
-import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, StaticInvoke}
-import org.apache.spark.sql.types.{ObjectType, _}
+import org.apache.spark.sql.catalyst.expressions.objects.Invoke
+import org.apache.spark.sql.types._
 
 
 object Primitive {
@@ -21,7 +22,7 @@ object Primitive {
 
   def box(expr: Expression, dataType: DataType): Expression = {
     if (isPrimitive(dataType)) {
-      StaticInvoke(
+      staticInvoke(
         staticObject = getClass(dataType),
         dataType = dataType,
         functionName = "box",

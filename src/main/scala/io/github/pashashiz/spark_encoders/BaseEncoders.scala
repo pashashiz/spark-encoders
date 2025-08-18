@@ -1,7 +1,8 @@
 package io.github.pashashiz.spark_encoders
 
+import io.github.pashashiz.spark_encoders.compatibility.staticInvoke
 import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, StaticInvoke}
+import org.apache.spark.sql.catalyst.expressions.objects.Invoke
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -12,7 +13,7 @@ import scala.reflect.ClassTag
 case object StringEncoder extends TypedEncoder[String] {
   def catalystRepr: DataType = StringType
   def toCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = classOf[UTF8String],
       dataType = catalystRepr,
       functionName = "fromString",
@@ -46,7 +47,7 @@ case object BinaryEncoder extends PrimitiveEncoder[Array[Byte]](BinaryType)
 case object BigDecimalEncoder extends TypedEncoder[BigDecimal] {
   override def catalystRepr: DataType = DecimalType.SYSTEM_DEFAULT
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
+    staticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
   override def fromCatalyst(path: Expression): Expression =
     Invoke(path, "toBigDecimal", jvmRepr)
 }
@@ -54,7 +55,7 @@ case object BigDecimalEncoder extends TypedEncoder[BigDecimal] {
 case object JBigDecimalEncoder extends TypedEncoder[JBigDecimal] {
   override def catalystRepr: DataType = DecimalType.SYSTEM_DEFAULT
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
+    staticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
   override def fromCatalyst(path: Expression): Expression =
     Invoke(path, "toJavaBigDecimal", jvmRepr)
 }
@@ -62,7 +63,7 @@ case object JBigDecimalEncoder extends TypedEncoder[JBigDecimal] {
 case object BigIntEncoder extends TypedEncoder[BigInt] {
   override def catalystRepr: DataType = DecimalType(DecimalType.MAX_PRECISION, 0)
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
+    staticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
   override def fromCatalyst(path: Expression): Expression =
     Invoke(path, "toScalaBigInt", jvmRepr)
 }
@@ -70,7 +71,7 @@ case object BigIntEncoder extends TypedEncoder[BigInt] {
 case object JBigIntEncoder extends TypedEncoder[JBigInt] {
   override def catalystRepr: DataType = DecimalType(DecimalType.MAX_PRECISION, 0)
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
+    staticInvoke(Decimal.getClass, catalystRepr, "apply", path :: Nil)
   override def fromCatalyst(path: Expression): Expression =
     Invoke(path, "toJavaBigInteger", jvmRepr)
 }
