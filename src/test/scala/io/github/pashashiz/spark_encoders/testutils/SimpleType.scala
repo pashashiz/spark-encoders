@@ -17,7 +17,7 @@ case class SimpleTypeA(
 case class SimpleTypeB(
   intField: Int,
   optionalUuid: Option[UUID],
-  arrayOfDates: Array[LocalDate],
+  vectorOfDates: Vector[LocalDate],
   mapOfOptions: Map[String, Option[Boolean]]
 ) extends SimpleType
 
@@ -36,7 +36,7 @@ object SimpleTypeB {
   val defaultValue: SimpleTypeB = SimpleTypeB(
     intField = 42,
     optionalUuid = Some(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")),
-    arrayOfDates = Array(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31)),
+    vectorOfDates = Vector(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31)),
     mapOfOptions = Map("enabled" -> Some(true), "disabled" -> None)
   )
 }
@@ -46,7 +46,7 @@ object SimpleType {
 }
 
 class SimpleTypeWithCustomEncoder(
-  toCaseClass: SimpleType
+  val toCaseClass: SimpleType
 ) extends Invariant[SimpleTypeWithCustomEncoder, SimpleType] {
   override def map(in: SimpleTypeWithCustomEncoder): SimpleType = in.toCaseClass
 
