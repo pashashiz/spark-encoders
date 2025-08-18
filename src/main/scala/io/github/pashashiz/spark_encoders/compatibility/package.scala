@@ -55,7 +55,7 @@ package object compatibility {
    * - Spark 4.x: Introduces SparkClosureCleaner.clean(closure: AnyRef, checkSerializable: Boolean, cleanTransitively: Boolean): Unit
    *              which internally uses a new version of ClosureCleaner.clean.
    */
-  def closureCleanerClean(
+  def cleanClosure(
     closure: AnyRef,
     checkSerializable: Boolean = true,
     cleanTransitively: Boolean = true
