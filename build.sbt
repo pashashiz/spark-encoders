@@ -35,4 +35,13 @@ lazy val root = (project in file("."))
         case _            => Seq.empty
       }),
     Test / parallelExecution := false,
-    providedAsRunnable)
+    providedAsRunnable,
+    
+    // Assembly settings
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case x => MergeStrategy.first
+    },
+    
+    // Include test dependencies in assembly
+    assembly / fullClasspath := (Test / fullClasspath).value)
