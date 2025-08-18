@@ -48,8 +48,11 @@ package object compatibility {
   }
 
   /**
-   * Shim for ClosureCleaner.clean that handles different method signatures across Spark versions.
-   * Databricks often backports changes, so method signatures may vary between versions.
+   * Shim for ClosureCleaner.clean that handles different implementations across Spark versions.
+   * 
+   * - Spark 3.x: Uses ClosureCleaner.clean(closure: AnyRef, checkSerializable: Boolean, cleanTransitively: Boolean): Unit
+   * - Spark 4.x: Introduces SparkClosureCleaner.clean(closure: AnyRef, checkSerializable: Boolean, cleanTransitively: Boolean): Unit
+   *              which internally uses the new ClosureCleaner.clean signature and handles return values/serialization
    */
   def closureCleanerClean(
     closure: AnyRef,
@@ -57,30 +60,33 @@ package object compatibility {
     cleanTransitively: Boolean = true
   ): Unit = {
     try {
-      // Try to get the ClosureCleaner companion object and clean method via reflection
-      val closureCleanerClass = Class.forName("org.apache.spark.util.ClosureCleaner$")
-      val companionObject = closureCleanerClass.getField("MODULE$").get(null)
+      // Try Spark 4.x first - check if SparkClosureCleaner exists
+      val sparkClosureCleanerClass = Class.forName("org.apache.spark.util.SparkClosureCleaner$")
+      val companionObject = sparkClosureCleanerClass.getField("MODULE$").get(null)
+      val cleanMethod = sparkClosureCleanerClass.getDeclaredMethod("clean", 
+        classOf[AnyRef], classOf[Boolean], classOf[Boolean])
       
-      // Try different method signatures to handle version compatibility
-      val methods = closureCleanerClass.getDeclaredMethods.filter(_.getName == "clean")
+      cleanMethod.setAccessible(true)
+      cleanMethod.invoke(companionObject, closure, Boolean.box(checkSerializable), Boolean.box(cleanTransitively))
       
-      val method = methods.find { m =>
-        val paramTypes = m.getParameterTypes
-        paramTypes.length == 3 &&
-        paramTypes(0) == classOf[AnyRef] &&
-        paramTypes(1) == classOf[Boolean] &&
-        paramTypes(2) == classOf[Boolean]
-      }.getOrElse {
-        // Fallback to first clean method if exact signature not found
-        methods.head
-      }
-      
-      method.setAccessible(true)
-      method.invoke(companionObject, closure, Boolean.box(checkSerializable), Boolean.box(cleanTransitively))
     } catch {
+      case _: ClassNotFoundException =>
+        // Fall back to Spark 3.x ClosureCleaner
+        try {
+          val closureCleanerClass = Class.forName("org.apache.spark.util.ClosureCleaner$")
+          val companionObject = closureCleanerClass.getField("MODULE$").get(null)
+          val cleanMethod = closureCleanerClass.getDeclaredMethod("clean", 
+            classOf[AnyRef], classOf[Boolean], classOf[Boolean])
+          
+          cleanMethod.setAccessible(true)
+          cleanMethod.invoke(companionObject, closure, Boolean.box(checkSerializable), Boolean.box(cleanTransitively))
+          
+        } catch {
+          case e: Exception =>
+            throw new RuntimeException(s"Failed to access ClosureCleaner.clean via reflection: ${e.getMessage}", e)
+        }
       case e: Exception =>
-        // If reflection fails, throw the original exception since ClosureCleaner is package-private
-        throw new RuntimeException(s"Failed to access ClosureCleaner.clean via reflection: ${e.getMessage}", e)
+        throw new RuntimeException(s"Failed to access SparkClosureCleaner.clean via reflection: ${e.getMessage}", e)
     }
   }
 }
