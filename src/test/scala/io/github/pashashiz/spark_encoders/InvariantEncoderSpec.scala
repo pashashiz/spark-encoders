@@ -34,6 +34,7 @@ object InvariantEncoderSpec {
       case _ =>
         false
     }
+    override def hashCode(): Int = toCaseClass.hashCode()
   }
 
   object SimpleTypeWithCustomEncoder extends Invariant[SimpleTypeWithCustomEncoder, SimpleType] {
