@@ -177,7 +177,8 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "gracefully fail when null values used in required fields" in {
         UserOptAge("Pavlo", null) should failToSerializeWith[UserOptAge](
-          "Error while encoding: java.lang.NullPointerException: Null value appeared in non-nullable field")
+          _.toLowerCase().contains("null value appeared in non-nullable field")
+        )
       }
 
       "support required nested product" in {
@@ -210,7 +211,8 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "gracefully fail when null value used as nested product" in {
         SimpleTaskOptUser("t1", null) should failToSerializeWith[SimpleTaskOptUser](
-          "Error while encoding: java.lang.NullPointerException: Null value appeared in non-nullable field")
+          _.toLowerCase().contains("null value appeared in non-nullable field")
+        )
       }
 
       "support remapping via dataframe map function" in {

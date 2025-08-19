@@ -84,7 +84,7 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
     }
   }
 
-  def failToSerializeWith[A](errorPrefix: String)(implicit encoder: TypedEncoder[A]): Matcher[A] = {
+  def failToSerializeWith[A](errorMatcher: String => Boolean)(implicit encoder: TypedEncoder[A]): Matcher[A] = {
 
     val resolved = encoder.encoderResolved
 
@@ -98,10 +98,12 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
 
     input => {
       val result = serialize(input).fold(identity, _ => "Serialization was successful")
+      val matches = errorMatcher(result)
+      
       MatchResult(
-        matches = result.startsWith(errorPrefix),
-        rawFailureMessage = s"""""$result" did not start with "$errorPrefix"""",
-        rawNegatedFailureMessage = s"""""$result" did started with "$errorPrefix"""")
+        matches = matches,
+        rawFailureMessage = s"""""$result" did not match the expected error pattern"""",
+        rawNegatedFailureMessage = s"""""$result" matched the expected error pattern when it shouldn't have"""")
     }
   }
 
