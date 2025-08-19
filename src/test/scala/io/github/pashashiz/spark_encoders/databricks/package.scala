@@ -4,6 +4,17 @@ import org.scalatest.{Args, Suite}
 import org.scalatest.tools.PublicStandardOutReporter
 
 package object databricks {
+  def runTestsWithAssertions(): Unit = {
+    val failedTestSuites = runTests().filterNot(_._2)
+    if (failedTestSuites.nonEmpty) {
+      val suiteNames = failedTestSuites.map(_._1).map(name => s"'${name}'").mkString(", ")
+      val message = s"[FAILURE] The following test suites failed: ${suiteNames}"
+      throw new RuntimeException(message)
+    } else {
+      println("[SUCCESS] All tests passed!")
+    }
+  }
+
   def runTests(): Seq[(String, Boolean)] = {
     val reporter = PublicStandardOutReporter(
       presentFullStackTraces = true,
