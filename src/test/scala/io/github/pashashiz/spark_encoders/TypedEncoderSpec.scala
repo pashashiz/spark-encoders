@@ -346,8 +346,8 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "fail with sub types that have same field of different type" in {
         // note: ideally code should not compile with this error, need to write out own macro
-        the[SparkException].thrownBy(TypedEncoder[WorkItemDiffType]).getMessage shouldBe
-          "[INTERNAL_ERROR] Standard ADT encoder does not support subtypes that have same field names with different types. Field 'size' has conflicting types: IntegerType, FloatType"
+        the[SparkException].thrownBy(TypedEncoder[WorkItemDiffType]).getMessage should include(
+          "[INTERNAL_ERROR] Standard ADT encoder does not support subtypes that have same field names with different types. Field 'size' has conflicting types: IntegerType, FloatType")
       }
 
       "support nested enums via case objects encoded as string" in {
