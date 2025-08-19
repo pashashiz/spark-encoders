@@ -9,7 +9,7 @@ class InvariantEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers 
     "used with SimpleType" should {
 
       // TODO: add equality for classes (now eq is based is pointer eq)
-      "support SimpleTypeA" in pendingUntilFixed {
+      "support SimpleTypeA" in {
         new SimpleTypeWithCustomEncoder(SimpleTypeA(true)) should haveTypedEncoder[SimpleTypeWithCustomEncoder]()
       }
     }

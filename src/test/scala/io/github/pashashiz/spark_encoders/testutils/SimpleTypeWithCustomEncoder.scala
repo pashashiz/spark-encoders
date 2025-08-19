@@ -33,7 +33,14 @@ object SimpleType {
 
 class SimpleTypeWithCustomEncoder(
   val toCaseClass: SimpleType
-)
+) {
+  override def equals(obj: Any): Boolean = obj match {
+    case encoder: SimpleTypeWithCustomEncoder =>
+      encoder.toCaseClass == toCaseClass
+    case _ =>
+      false
+  }
+}
 
 object SimpleTypeWithCustomEncoder extends Invariant[SimpleTypeWithCustomEncoder, SimpleType] {
   override def map(in: SimpleTypeWithCustomEncoder): SimpleType = in.toCaseClass
