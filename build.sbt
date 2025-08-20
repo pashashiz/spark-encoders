@@ -45,12 +45,12 @@ lazy val root = (project in file("."))
     
     // Assembly settings - production uber JAR (compile scope only)
     assembly / fullClasspath := (Compile / fullClasspath).value,
-    assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
+    assembly / assemblyJarName := s"${name.value}-${version.value}-all.jar",
     
     // Enable Test configuration for assembly
     inConfig(Test)(baseAssemblySettings),
     
     // Test assembly settings - includes test dependencies
     Test / assembly / fullClasspath := (Test / fullClasspath).value,
-    Test / assembly / assemblyJarName := s"${name.value}-${version.value}-tests.jar",
+    Test / assembly / assemblyJarName := s"${name.value}-${version.value}-all-tests.jar",
   )
