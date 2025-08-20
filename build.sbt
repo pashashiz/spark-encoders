@@ -50,7 +50,7 @@ lazy val root = (project in file("."))
     // Enable Test configuration for assembly
     inConfig(Test)(baseAssemblySettings),
     
-    // Test assembly settings - includes test dependencies
+    // Test assembly settings - includes test dependencies as well for running tests on Databricks
     Test / assembly / fullClasspath := (Test / fullClasspath).value,
     Test / assembly / assemblyJarName := s"${name.value}-${version.value}-all-tests.jar",
   )
