@@ -37,11 +37,21 @@ lazy val root = (project in file("."))
     Test / parallelExecution := false,
     providedAsRunnable,
     
-    // Assembly settings
+    // Assembly settings - production uber JAR (compile scope only)
     assembly / assemblyMergeStrategy := {
       case PathList("META-INF", _) => MergeStrategy.discard
       case x => MergeStrategy.first
     },
+    assembly / fullClasspath := (Compile / fullClasspath).value,
+    assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
     
-    // Include test dependencies in assembly
-    assembly / fullClasspath := (Test / fullClasspath).value)
+    // Enable Test configuration for assembly
+    inConfig(Test)(baseAssemblySettings),
+    
+    // Test assembly settings - includes test dependencies
+    Test / assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", _) => MergeStrategy.discard
+      case x => MergeStrategy.first
+    },
+    Test / assembly / fullClasspath := (Test / fullClasspath).value,
+    Test / assembly / assemblyJarName := s"${name.value}-${version.value}-tests.jar",
