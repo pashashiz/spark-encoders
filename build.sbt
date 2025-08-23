@@ -43,14 +43,18 @@ lazy val root = (project in file("."))
       case _ => MergeStrategy.first
     },
     
-    // Assembly settings - production uber JAR (compile scope only)
-    assembly / fullClasspath := (Compile / fullClasspath).value,
+    // Assembly settings - production uber JAR (runtime scope only, excludes provided deps)
+    assembly / fullClasspath := (Runtime / fullClasspath).value,
     assembly / assemblyJarName := s"${name.value}-${version.value}-all.jar",
     
     // Enable Test configuration for assembly
     inConfig(Test)(baseAssemblySettings),
     
-    // Test assembly settings - includes test dependencies as well for running tests on Databricks
-    Test / assembly / fullClasspath := (Test / fullClasspath).value,
+    // Test assembly settings - includes test dependencies but excludes provided deps (DBR provides Spark)
+    Test / assembly / assemblyExcludedJars := {
+      val cp = (Test / fullClasspath).value
+      val providedJars = update.value.select(configurationFilter("provided")).toSet
+      cp.filter(providedJars contains _.data)
+    },
     Test / assembly / assemblyJarName := s"${name.value}-${version.value}-all-tests.jar",
   )
