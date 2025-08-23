@@ -177,7 +177,8 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "gracefully fail when null values used in required fields" in {
         UserOptAge("Pavlo", null) should failToSerializeWith[UserOptAge](
-          "Error while encoding: java.lang.NullPointerException: Null value appeared in non-nullable field")
+          _.toLowerCase().contains("null value appeared in non-nullable field")
+        )
       }
 
       "support required nested product" in {
@@ -210,7 +211,8 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "gracefully fail when null value used as nested product" in {
         SimpleTaskOptUser("t1", null) should failToSerializeWith[SimpleTaskOptUser](
-          "Error while encoding: java.lang.NullPointerException: Null value appeared in non-nullable field")
+          _.toLowerCase().contains("null value appeared in non-nullable field")
+        )
       }
 
       "support remapping via dataframe map function" in {
@@ -346,8 +348,8 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
 
       "fail with sub types that have same field of different type" in {
         // note: ideally code should not compile with this error, need to write out own macro
-        the[SparkException].thrownBy(TypedEncoder[WorkItemDiffType]).getMessage shouldBe
-          "[INTERNAL_ERROR] Standard ADT encoder does not support subtypes that have same field names with different types. Field 'size' has conflicting types: IntegerType, FloatType"
+        the[SparkException].thrownBy(TypedEncoder[WorkItemDiffType]).getMessage should include(
+          "[INTERNAL_ERROR] Standard ADT encoder does not support subtypes that have same field names with different types. Field 'size' has conflicting types: IntegerType, FloatType")
       }
 
       "support nested enums via case objects encoded as string" in {

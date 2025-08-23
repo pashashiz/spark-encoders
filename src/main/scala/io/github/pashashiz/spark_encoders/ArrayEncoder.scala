@@ -1,7 +1,8 @@
 package io.github.pashashiz.spark_encoders
 
+import io.github.pashashiz.spark_encoders.compatibility.staticInvoke
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
-import org.apache.spark.sql.catalyst.expressions.objects.{AssertNotNull, Invoke, MapObjects, StaticInvoke}
+import org.apache.spark.sql.catalyst.expressions.objects.{AssertNotNull, Invoke, MapObjects}
 import org.apache.spark.sql.catalyst.expressions.{Expression, UnsafeArrayData}
 import org.apache.spark.sql.types._
 
@@ -30,7 +31,7 @@ case class PrimitiveArrayEncoder[A]()(implicit
     ArrayType(elementEncoder.catalystRepr, elementEncoder.nullable)
 
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = classOf[UnsafeArrayData],
       dataType = catalystRepr,
       functionName = "fromPrimitiveArray",

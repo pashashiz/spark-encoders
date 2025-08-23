@@ -6,7 +6,6 @@ import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.catalyst.expressions.{BoundReference, Expression}
 import org.apache.spark.sql.catalyst.types.DataTypeUtils.toAttributes
 import org.apache.spark.sql.types._
-import org.apache.spark.util.PrivateClosureCleaner
 
 import java.io.Serializable
 import java.math.{BigDecimal => JBigDecimal, BigInteger => JBigInt}
@@ -58,8 +57,8 @@ object TypedEncoder extends TypedEncoderImplicits {
 
   def xmap[A: ClassTag, B: ClassTag: TypedEncoder](mapVia: A => B)(
       contrmapVia: B => A): TypedEncoder[A] = {
-    PrivateClosureCleaner.clean(mapVia)
-    PrivateClosureCleaner.clean(contrmapVia)
+    compatibility.cleanClosure(mapVia)
+    compatibility.cleanClosure(contrmapVia)
     InvariantEncoder(new Invariant[A, B] {
       override def map(in: A): B = mapVia(in)
       override def contrMap(out: B): A = contrmapVia(out)

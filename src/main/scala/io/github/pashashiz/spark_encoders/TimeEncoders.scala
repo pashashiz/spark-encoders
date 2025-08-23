@@ -1,6 +1,7 @@
 package io.github.pashashiz.spark_encoders
 
-import org.apache.spark.sql.catalyst.expressions.objects.{Invoke, StaticInvoke}
+import io.github.pashashiz.spark_encoders.compatibility.staticInvoke
+import org.apache.spark.sql.catalyst.expressions.objects.Invoke
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, Multiply}
 import org.apache.spark.sql.catalyst.util.{DateTimeUtils, IntervalUtils}
 import org.apache.spark.sql.types._
@@ -17,7 +18,7 @@ abstract class BaseTimeEncoder[A: ClassTag](
     extends TypedEncoder[A] {
 
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = DateTimeUtils.getClass,
       dataType = catalystRepr,
       functionName = to,
@@ -25,7 +26,7 @@ abstract class BaseTimeEncoder[A: ClassTag](
       returnNullable = false)
 
   override def fromCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = DateTimeUtils.getClass,
       dataType = jvmRepr,
       functionName = from,
@@ -73,7 +74,7 @@ object JDurationEncoder extends TypedEncoder[JDuration] {
   override def catalystRepr: DataType = DayTimeIntervalType.DEFAULT
 
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = IntervalUtils.getClass,
       dataType = catalystRepr,
       functionName = "durationToMicros",
@@ -81,7 +82,7 @@ object JDurationEncoder extends TypedEncoder[JDuration] {
       returnNullable = false)
 
   override def fromCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = IntervalUtils.getClass,
       dataType = jvmRepr,
       functionName = "microsToDuration",
@@ -101,7 +102,7 @@ object FiniteDurationEncoder extends TypedEncoder[FiniteDuration] {
       returnNullable = false)
 
   override def fromCatalyst(path: Expression): Expression = {
-    StaticInvoke(
+    staticInvoke(
       classOf[Duration],
       jvmRepr,
       "fromNanos",
@@ -115,7 +116,7 @@ object PeriodEncoder extends TypedEncoder[Period] {
   override def catalystRepr: DataType = YearMonthIntervalType.DEFAULT
 
   override def toCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = IntervalUtils.getClass,
       dataType = catalystRepr,
       functionName = "periodToMonths",
@@ -123,7 +124,7 @@ object PeriodEncoder extends TypedEncoder[Period] {
       returnNullable = false)
 
   override def fromCatalyst(path: Expression): Expression =
-    StaticInvoke(
+    staticInvoke(
       staticObject = IntervalUtils.getClass,
       dataType = jvmRepr,
       functionName = "monthsToPeriod",

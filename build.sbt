@@ -35,4 +35,30 @@ lazy val root = (project in file("."))
         case _            => Seq.empty
       }),
     Test / parallelExecution := false,
-    providedAsRunnable)
+    providedAsRunnable,
+    
+    // Shared assembly merge strategy
+    ThisBuild / assemblyMergeStrategy := {
+      case PathList("META-INF", _) => MergeStrategy.discard
+      case _ => MergeStrategy.first
+    },
+    
+    // Assembly settings - production uber JAR (runtime scope only, excludes provided deps)
+    assembly / fullClasspath := (Runtime / fullClasspath).value,
+    assembly / assemblyJarName := s"${name.value}-${version.value}-all.jar",
+    assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false),
+    
+    // Enable Test configuration for assembly
+    inConfig(Test)(baseAssemblySettings),
+    
+    // Test assembly settings - includes test dependencies but excludes provided deps (DBR provides Spark)
+    Test / assembly / fullClasspath := {
+      val exported = (Test / exportedProducts).value
+      val deps = (Test / dependencyClasspath).value
+      val providedFiles = update.value.select(configurationFilter("provided")).toSet
+      val filteredDeps = deps.filterNot(entry => providedFiles.contains(entry.data))
+      exported ++ filteredDeps
+    },
+    Test / assembly / assemblyJarName := s"${name.value}-${version.value}-all-tests.jar",
+    Test / assembly / assemblyOption := (Test / assembly / assemblyOption).value.withIncludeScala(false),
+  )
