@@ -51,10 +51,12 @@ lazy val root = (project in file("."))
     inConfig(Test)(baseAssemblySettings),
     
     // Test assembly settings - includes test dependencies but excludes provided deps (DBR provides Spark)
-    Test / assembly / assemblyExcludedJars := {
-      val cp = (Test / fullClasspath).value
-      val providedJars = update.value.select(configurationFilter("provided")).toSet
-      cp.filter(providedJars contains _.data)
+    Test / assembly / fullClasspath := {
+      val exported = (Test / exportedProducts).value
+      val deps = (Test / dependencyClasspath).value
+      val providedFiles = update.value.select(configurationFilter("provided")).toSet
+      val filteredDeps = deps.filterNot(entry => providedFiles.contains(entry.data))
+      exported ++ filteredDeps
     },
     Test / assembly / assemblyJarName := s"${name.value}-${version.value}-all-tests.jar",
   )
