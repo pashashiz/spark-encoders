@@ -1,13 +1,10 @@
 package io.github.pashashiz.spark_encoders
 
 import org.apache.spark.sql.Encoders
-import org.apache.spark.sql.catalyst.analysis.GetColumnByOrdinal
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
-import org.apache.spark.sql.catalyst.expressions.{BoundReference, Expression}
-import org.apache.spark.sql.catalyst.types.DataTypeUtils.toAttributes
+import org.apache.spark.sql.catalyst.expressions.{AttributeReference, Expression}
 import org.apache.spark.sql.types._
 
-import java.io.Serializable
 import java.math.{BigDecimal => JBigDecimal, BigInteger => JBigInt}
 import java.sql.{Date, Timestamp}
 import java.time.{Duration => JDuration, Instant, LocalDate, LocalDateTime, OffsetDateTime, Period, ZonedDateTime}
@@ -32,20 +29,20 @@ abstract class TypedEncoder[A](implicit val classTag: ClassTag[A]) extends Seria
 
   def fromCatalyst(path: Expression): Expression
 
-  def encoder: ExpressionEncoder[A] = {
-    // input is always BoundReference with single element
-    val in = BoundReference(0, jvmRepr, nullable)
-    // output is always GetColumnByOrdinal with single element
-    val out = GetColumnByOrdinal(0, catalystRepr)
-    new ExpressionEncoder[A](
-      objSerializer = toCatalyst(in),
-      objDeserializer = fromCatalyst(out),
-      clsTag = classTag)
-  }
+  def encoder: ExpressionEncoder[A] =
+    Shim.expressionEncoder(this)
 
   def encoderResolved: ExpressionEncoder[A] = {
     val instance = encoder
-    instance.resolveAndBind(toAttributes(instance.schema))
+    val attrs = instance.schema match {
+      case s: StructType =>
+        s.fields.map { f =>
+          AttributeReference(f.name, f.dataType, f.nullable, f.metadata)()
+        }.toSeq
+      case other =>
+        AttributeReference("value", other)() :: Nil
+    }
+    instance.resolveAndBind(attrs)
   }
 
   override def toString: String = getClass.getSimpleName.replace("$", "")
@@ -57,8 +54,8 @@ object TypedEncoder extends TypedEncoderImplicits {
 
   def xmap[A: ClassTag, B: ClassTag: TypedEncoder](mapVia: A => B)(
       contrmapVia: B => A): TypedEncoder[A] = {
-    compatibility.cleanClosure(mapVia)
-    compatibility.cleanClosure(contrmapVia)
+    Shim.cleanClosure(mapVia)
+    Shim.cleanClosure(contrmapVia)
     InvariantEncoder(new Invariant[A, B] {
       override def map(in: A): B = mapVia(in)
       override def contrMap(out: B): A = contrmapVia(out)
@@ -108,10 +105,8 @@ trait TypedEncoderImplicits extends Derivation {
   implicit def optionEncoder[A: TypedEncoder]: TypedEncoder[Option[A]] =
     OptionEncoder()
 
-  def kryo[A: ClassTag]: TypedEncoder[A] = {
-    val external = Encoders.kryo[A].asInstanceOf[ExpressionEncoder[A]]
-    ExternalEncoder(external)
-  }
+  def kryo[A: ClassTag]: TypedEncoder[A] =
+    ExternalEncoder(Encoders.kryo[A])
 
   implicit def udt[A >: Null: ClassTag](implicit instance: UserDefinedType[A]): TypedEncoder[A] =
     UDTEncoder(instance)

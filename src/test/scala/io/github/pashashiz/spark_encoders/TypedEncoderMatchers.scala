@@ -8,7 +8,7 @@ import org.scalatest.{Assertion, Suite}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.matchers.{MatchResult, Matcher}
 
-import scala.reflect.{ClassTag, classTag}
+import scala.reflect.{classTag, ClassTag}
 import scala.util.Try
 
 trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
@@ -16,6 +16,8 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
   def haveTypedEncoder[A](
       pure: Boolean = false,
       dataset: Boolean = true,
+      codegen: Boolean = true,
+      interpreted: Boolean = true,
       assertion: (A, A) => Assertion = (l: A, r: A) => l shouldBe r)(
       implicit enc: TypedEncoder[A]): Matcher[A] = {
 
@@ -73,10 +75,9 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
         } yield ()
         result.left.map(err => s"EXEC=${codegen.toString}: $err")
       }
-
       val result = for {
-        _ <- verify(CodegenObjectFactoryMode.CODEGEN_ONLY)
-        _ <- verify(CodegenObjectFactoryMode.NO_CODEGEN)
+        _ <- if (codegen) verify(CodegenObjectFactoryMode.CODEGEN_ONLY) else Right(())
+        _ <- if (interpreted) verify(CodegenObjectFactoryMode.NO_CODEGEN) else Right(())
       } yield ()
 
       val message = result.fold(identity, _ => s"The object $input has type encoder")
@@ -84,7 +85,8 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
     }
   }
 
-  def failToSerializeWith[A](errorMatcher: String => Boolean)(implicit encoder: TypedEncoder[A]): Matcher[A] = {
+  def failToSerializeWith[A](errorMatcher: String => Boolean)(implicit
+      encoder: TypedEncoder[A]): Matcher[A] = {
 
     val resolved = encoder.encoderResolved
 
@@ -99,11 +101,12 @@ trait TypedEncoderMatchers extends SharedSpark with Matchers { self: Suite =>
     input => {
       val result = serialize(input).fold(identity, _ => "Serialization was successful")
       val matches = errorMatcher(result)
-      
+
       MatchResult(
         matches = matches,
         rawFailureMessage = s"""""$result" did not match the expected error pattern"""",
-        rawNegatedFailureMessage = s"""""$result" matched the expected error pattern when it shouldn't have"""")
+        rawNegatedFailureMessage =
+          s"""""$result" matched the expected error pattern when it shouldn't have"""")
     }
   }
 

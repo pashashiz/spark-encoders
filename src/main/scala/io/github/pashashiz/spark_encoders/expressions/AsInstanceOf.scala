@@ -1,6 +1,6 @@
 package io.github.pashashiz.spark_encoders.expressions
 
-import org.apache.spark.SparkException
+import io.github.pashashiz.spark_encoders.EncoderException
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.Block._
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
@@ -14,7 +14,7 @@ case class AsInstanceOf(child: Expression, newDataType: DataType)
   val runtimeClass = newDataType match {
     case ObjectType(runtimeClass) => runtimeClass
     case other =>
-      throw SparkException.internalError(s"Can only cast object type but received $other")
+      throw new EncoderException(s"Can only cast object type but received $other")
   }
 
   override def dataType: DataType = newDataType

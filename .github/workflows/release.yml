@@ -7,9 +7,16 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-22.04 ]
-        java: [ 8 ]
+        include:
+          - os: ubuntu-22.04
+            java: 8
+            spark: 3.5.7
+          - os: ubuntu-22.04
+            java: 17
+            spark: 4.0.1
     runs-on: ${{ matrix.os }}
+    env:
+      SPARK_VERSION: ${{ matrix.spark }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4

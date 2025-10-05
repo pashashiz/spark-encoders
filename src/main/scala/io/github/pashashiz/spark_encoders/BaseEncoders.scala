@@ -1,6 +1,6 @@
 package io.github.pashashiz.spark_encoders
 
-import io.github.pashashiz.spark_encoders.compatibility.staticInvoke
+import io.github.pashashiz.spark_encoders.Shim.staticInvoke
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.objects.Invoke
 import org.apache.spark.sql.types._

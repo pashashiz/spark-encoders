@@ -10,10 +10,24 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false # Set to false so one failing job doesn't cancel the other
       matrix:
-        os: [ ubuntu-22.04 ]
-        java: [ 8 ]
+        include:
+          - os: ubuntu-22.04
+            java: 8
+            spark: 3.3.4
+          - os: ubuntu-22.04
+            java: 8
+            spark: 3.4.4
+          - os: ubuntu-22.04
+            java: 8
+            spark: 3.5.7
+          - os: ubuntu-22.04
+            java: 17
+            spark: 4.0.1
     runs-on: ${{ matrix.os }}
+    env:
+      SPARK_VERSION: ${{ matrix.spark }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4

@@ -2,7 +2,6 @@ package io.github.pashashiz.spark_encoders
 
 import io.github.pashashiz.spark_encoders.expressions.{AsInstanceOf, ClassSimpleName}
 import magnolia1.{SealedTrait, Subtype}
-import org.apache.spark.SparkException
 import org.apache.spark.sql.catalyst.analysis.UnresolvedExtractValue
 import org.apache.spark.sql.catalyst.expressions.objects.AssertNotNull
 import org.apache.spark.sql.catalyst.expressions.{CaseWhen, CreateNamedStruct, EqualTo, Expression, If, IsNull, Literal, UpCast}
@@ -41,7 +40,7 @@ class ADTClassEncoder[A: ClassTag](ctx: SealedTrait[TypedEncoder, A]) extends Ty
   private def extractStructFields(subtype: Subtype[TypedEncoder, A]) =
     subtype.typeclass.catalystRepr match {
       case StructType(fields) => fields
-      case other => throw SparkException.internalError(
+      case other => throw new EncoderException(
           s"ADT case should have StructType schema but was $other")
     }
 
@@ -64,7 +63,7 @@ class ADTClassEncoder[A: ClassTag](ctx: SealedTrait[TypedEncoder, A]) extends Ty
             val required = fields.count(!_.nullable) == ctx.subtypes.size
             fields.head.copy(nullable = !required)
           } else {
-            throw throw SparkException.internalError(
+            throw throw new EncoderException(
               s"Standard ADT encoder does not support subtypes that have same field names " +
               s"with different types. Field '$fieldName' has conflicting types: ${types.mkString(", ")}")
           }
@@ -81,7 +80,7 @@ class ADTClassEncoder[A: ClassTag](ctx: SealedTrait[TypedEncoder, A]) extends Ty
         val exprsWithNames = subtype.typeclass.toCatalyst(casted) match {
           case CreateNamedStruct(children)                   => children
           case If(IsNull(_), _, CreateNamedStruct(children)) => children
-          case other => throw throw SparkException.internalError(
+          case other => throw throw new EncoderException(
               s"ADT case should be encoded as CreateNamedStruct but was $other")
         }
         val exprs = exprsWithNames.zipWithIndex.collect {
