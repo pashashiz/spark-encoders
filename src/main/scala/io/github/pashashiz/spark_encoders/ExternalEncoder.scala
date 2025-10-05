@@ -1,5 +1,6 @@
 package io.github.pashashiz.spark_encoders
 
+import org.apache.spark.sql.Encoder
 import org.apache.spark.sql.catalyst.analysis.GetColumnByOrdinal
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.catalyst.expressions.{BoundReference, Expression}
@@ -24,4 +25,9 @@ case class ExternalEncoder[T: ClassTag](external: ExpressionEncoder[T]) extends 
       case GetColumnByOrdinal(0, _) => path
     }
   }
+}
+
+object ExternalEncoder {
+  def apply[T: ClassTag](external: Encoder[T]): ExternalEncoder[T] =
+    new ExternalEncoder(Shim.expressionEncoder(external))
 }

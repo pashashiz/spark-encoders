@@ -1,7 +1,7 @@
 package io.github.pashashiz.spark_encoders
 
+import org.apache.spark.sql.types.Decimal
 import org.apache.spark.sql.types.DecimalType.SYSTEM_DEFAULT
-import org.apache.spark.sql.types.{Decimal, DecimalType}
 
 import java.math.{BigDecimal => JBigDecimal, BigInteger => JBigInt}
 import java.sql.{Date, Timestamp}
@@ -104,7 +104,7 @@ class OptionEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers wit
         // note that we can't go over the maximum precision of DecimalType (38),
         // unless we specify the schema explicitly
         val tooBigDecimal = new JBigDecimal(Long.MaxValue)
-          .setScale(DecimalType.DEFAULT_SCALE)
+          .setScale(SYSTEM_DEFAULT.scale)
           .multiply(new JBigDecimal(3))
         noException should be thrownBy Decimal(tooBigDecimal, SYSTEM_DEFAULT.precision, SYSTEM_DEFAULT.scale)
         new JBigDecimal(tooBigDecimal.longValue) should not equal tooBigDecimal

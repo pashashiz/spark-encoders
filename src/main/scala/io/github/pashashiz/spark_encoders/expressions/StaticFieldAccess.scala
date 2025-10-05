@@ -1,6 +1,6 @@
 package io.github.pashashiz.spark_encoders.expressions
 
-import org.apache.spark.SparkException
+import io.github.pashashiz.spark_encoders.EncoderException
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.LeafExpression
 import org.apache.spark.sql.catalyst.expressions.codegen.Block.BlockHelper
@@ -18,7 +18,7 @@ case class StaticFieldAccess(
     try {
       staticFieldClass.getField(fieldName)
     } catch {
-      case _: NoSuchFieldException => throw SparkException.internalError(
+      case _: NoSuchFieldException => throw new EncoderException(
           s"""A field named "$fieldName" is not declared in $staticFieldClass""")
     }
 

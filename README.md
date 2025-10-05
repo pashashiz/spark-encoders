@@ -6,9 +6,32 @@ This is a light-weight Scala library for compile-time derivation of Spark `org.a
 comprehensive support for standard Scala data types (ADTs, Enums, Either, Try, collections, durations, etc.) and is
 designed for easy extension with custom types.
 
-The library supports Scala `2.12`, `2.13`, and Scala `3` and Databricks Runtime 16.4. The Scala 2 version has a single 
-external dependency on [magnolia](https://github.com/softwaremill/magnolia/tree/scala2); the Scala 3 version has no external dependencies.
+The library supports Scala `2.12`, `2.13`, and Scala `3` and Databricks Runtime `16.4` (more will be tested).
+The Scala 2 version has a single external dependency
+on [magnolia](https://github.com/softwaremill/magnolia/tree/scala2); the Scala 3 version has no external dependencies.
 We plan to remove the Magnolia dependency in the future to make the library even lighter.
+
+**Spark OOS support matrix:**
+
+| Spark Version  | JDK Versions          | Scala Versions        | 
+|----------------|-----------------------|-----------------------|
+| `3.3.x` [DONE] | `1.8`, `1.11`, `1.17` | `2.12`, `2.13`, `3.3` |
+| `3.4.x` [DONE] | `1.8`, `1.11`, `1.17` | `2.12`, `2.13`, `3.3` |
+| `3.5.x` [DONE] | `1.8`, `1.11`, `1.17` | `2.12`, `2.13`, `3.3` |
+| `4.0.x` [DONE] | `1.17`, `1.21`        | `2.13`, `3.3`         |
+
+**Spark Databricks support matrix:**
+
+| Databricks Runtime | Spark Version | JDK Versions  | Scala Versions |
+|--------------------|---------------|---------------|----------------|
+| `12.2` [TBD]       | `3.3.2`       | `1.8`, `1.11` | `2.12`         |
+| `13.3` [TBD]       | `3.4.1`       | `1.8`, `1.11` | `2.12`         |
+| `14.3` [TBD]       | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
+| `15.3` [TBD]       | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
+| `16.4` [DONE]      | `3.5.2`       | `1.17`        | `2.12`, `2.13` |
+| `17.2` [TBD]       | `4.0.0`       | `1.17`        | `2.13`         |
+
+For now only `16.4` was tested, but more is coming ...
 
 Spark requires an `Encoder[A]` for `Dataset[A]` operations and when parallelizing collections. Encoders handle the
 crucial serialization/deserialization between Scala objects and Spark's internal `Row` format (used by Catalyst),
@@ -116,7 +139,7 @@ import io.github.pashashiz.spark_encoders.TypedEncoder.given
 Alternatively, you can use the `derives` keyword directly on your `case class` or `sealed trait`:
 
 ```scala 3
-case class User(name: String, age: Int)derives TypedEncoder
+case class User(name: String, age: Int) derives TypedEncoder
 ```
 
 Using the derived encoder, you can create a Dataset:

@@ -1,6 +1,6 @@
 inThisBuild(List(
-  scalaVersion := "2.12.20",
-  crossScalaVersions := Seq("2.12.20", "2.13.16", "3.3.6"),
+  ThisBuild / scalaVersion := V.scala,
+  ThisBuild / crossScalaVersions := V.scalaAll,
   organization := "io.github.pashashiz",
   homepage := Some(url("https://github.com/pashashiz")),
   licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
@@ -21,36 +21,63 @@ lazy val providedAsRunnable = Seq(
     .runMainTask(Compile / fullClasspath, Compile / run / runner)
     .evaluated)
 
+lazy val javaOpens = {
+  if (V.java >= 17) {
+    // borrowed from https://github.com/apache/spark/blob/master/project/SparkBuild.scala
+    Seq(
+      "--add-opens=java.base/java.lang=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+      "--add-opens=java.base/java.io=ALL-UNNAMED",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/java.util=ALL-UNNAMED",
+      "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED",
+      "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
+      "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
+      "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED")
+  } else {
+    Seq.empty
+  }
+}
+
 lazy val root = (project in file("."))
   .settings(
-    name := "spark-encoders",
+    name := s"spark-encoders-${V.sparkMajor}",
     libraryDependencies ++= Seq(
-      ("org.apache.spark" %% "spark-sql" % "3.5.5" % Provided).cross(CrossVersion.for3Use2_13),
-      "org.scalatest" %% "scalatest" % "3.2.19" % Test exclude (
+      ("org.apache.spark" %% "spark-sql" % V.spark % Provided).cross(CrossVersion.for3Use2_13),
+      "org.scalatest" %% "scalatest" % V.scalaTest % Test exclude (
         "org.scala-lang.modules",
         "scala-xml_3")),
     libraryDependencies ++= (
       CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, _)) => Seq("com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.10")
+        case Some((2, _)) => Seq("com.softwaremill.magnolia1_2" %% "magnolia" % V.magnolia)
         case _            => Seq.empty
       }),
+    Compile / unmanagedSourceDirectories += {
+      baseDirectory.value / "src/main" / s"scala-spark${V.sparkMajor}"
+    },
     Test / parallelExecution := false,
+    Test / fork := true,
+    Test / javaOptions ++= javaOpens,
     providedAsRunnable,
-    
+
     // Shared assembly merge strategy
     ThisBuild / assemblyMergeStrategy := {
       case PathList("META-INF", _) => MergeStrategy.discard
-      case _ => MergeStrategy.first
+      case _                       => MergeStrategy.first
     },
-    
+
     // Assembly settings - production uber JAR (runtime scope only, excludes provided deps)
     assembly / fullClasspath := (Runtime / fullClasspath).value,
     assembly / assemblyJarName := s"${name.value}-${version.value}-all.jar",
     assembly / assemblyOption := (assembly / assemblyOption).value.withIncludeScala(false),
-    
+
     // Enable Test configuration for assembly
     inConfig(Test)(baseAssemblySettings),
-    
+
     // Test assembly settings - includes test dependencies but excludes provided deps (DBR provides Spark)
     Test / assembly / fullClasspath := {
       val exported = (Test / exportedProducts).value
@@ -60,5 +87,5 @@ lazy val root = (project in file("."))
       exported ++ filteredDeps
     },
     Test / assembly / assemblyJarName := s"${name.value}-${version.value}-all-tests.jar",
-    Test / assembly / assemblyOption := (Test / assembly / assemblyOption).value.withIncludeScala(false),
-  )
+    Test / assembly / assemblyOption := (Test / assembly / assemblyOption).value.withIncludeScala(
+      false))

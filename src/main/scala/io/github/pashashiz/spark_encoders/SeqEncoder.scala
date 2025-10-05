@@ -23,7 +23,7 @@ case class SeqEncoder[C[_] <: collection.Seq[_], A]()(implicit
 
   // catalyst represents array as ArrayData
   override def toCatalyst(path: Expression): Expression =
-    if (Primitive.isPrimitive(elementEncoder.jvmRepr)) {
+    if (Types.isPrimitive(elementEncoder.jvmRepr)) {
       // skip map phase
       // note: check to see if we can store it as unsafe array data
       NewInstance(classOf[GenericArrayData], path :: Nil, catalystRepr)

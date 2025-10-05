@@ -1,6 +1,6 @@
 package io.github.pashashiz.spark_encoders
 
-import io.github.pashashiz.spark_encoders.compatibility.staticInvoke
+import io.github.pashashiz.spark_encoders.Shim.staticInvoke
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.catalyst.expressions.objects.{AssertNotNull, Invoke, MapObjects}
 import org.apache.spark.sql.catalyst.expressions.{Expression, UnsafeArrayData}
@@ -15,7 +15,7 @@ object ArrayEncoder {
     elementEncoder.jvmRepr match {
       case ByteType =>
         BinaryEncoder.asInstanceOf[TypedEncoder[Array[A]]]
-      case dataType if Primitive.isPrimitive(dataType) =>
+      case dataType if Types.isPrimitive(dataType) =>
         PrimitiveArrayEncoder()
       case _ =>
         ObjectArrayEncoder()
