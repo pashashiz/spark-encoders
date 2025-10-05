@@ -45,7 +45,7 @@ lazy val javaOpens = {
 
 lazy val root = (project in file("."))
   .settings(
-    name := s"spark-encoders-${V.sparkMajor}",
+    name := s"spark${V.sparkMajor}-encoders",
     libraryDependencies ++= Seq(
       ("org.apache.spark" %% "spark-sql" % V.spark % Provided).cross(CrossVersion.for3Use2_13),
       "org.scalatest" %% "scalatest" % V.scalaTest % Test exclude (
