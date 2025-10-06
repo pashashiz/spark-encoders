@@ -89,8 +89,14 @@ types. However, this approach has significant limitations:
 
 Add the following library dependency using your build tool (e.g., sbt):
 
+Spark `3.x`:
 ```scala
-libraryDependencies += "io.github.pashashiz" %% "spark-encoders" % "0.1.0" // Check latest version
+libraryDependencies += "io.github.pashashiz" %% "spark3-encoders" % "0.2.0" // Check latest version
+```
+
+Spark `4.x`:
+```scala
+libraryDependencies += "io.github.pashashiz" %% "spark4-encoders" % "0.2.0" // Check latest version
 ```
 
 ### Deriving Your First Product Encoder
@@ -416,7 +422,6 @@ duplication.
 
 ## Future Work:
 
-- Cross spark versions build
 - Support the rest of Scala collections and data types
 - Support of different ADT encoding strategies
 - Benchmarks
