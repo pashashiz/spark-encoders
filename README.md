@@ -422,7 +422,6 @@ duplication.
 
 ## Future Work:
 
-- Cross spark versions build
 - Support the rest of Scala collections and data types
 - Support of different ADT encoding strategies
 - Benchmarks
