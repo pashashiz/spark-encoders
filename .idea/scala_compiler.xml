@@ -2,6 +2,6 @@
 <project version="4">
   <component name="ScalaCompilerConfiguration">
     <option name="separateProdTestSources" value="true" />
-    <profile name="sbt 1" modules="spark-encoders,spark-encoders.main,spark-encoders.test" />
+    <profile name="sbt 1" modules="spark-encoders,spark-encoders-3,spark-encoders-3.main,spark-encoders-3.test,spark-encoders.main,spark-encoders.test,spark3-encoders,spark3-encoders.main,spark3-encoders.test,spark4-encoders,spark4-encoders.main,spark4-encoders.test" />
   </component>
 </project>
