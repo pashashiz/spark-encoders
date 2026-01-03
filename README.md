@@ -29,7 +29,8 @@ We plan to remove the Magnolia dependency in the future to make the library even
 | `14.3` [DONE]      | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
 | `15.3` [DONE]      | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
 | `16.4` [DONE]      | `3.5.2`       | `1.17`        | `2.12`, `2.13` |
-| `17.2` [DONE]      | `4.0.0`       | `1.17`        | `2.13`         |
+| `17.3` [DONE]      | `4.0.0`       | `1.17`        | `2.13`         |
+| `18-BETA` [DONE]   | `4.0.0`       | `1.21`        | `2.13`         |
 
 Spark requires an `Encoder[A]` for `Dataset[A]` operations and when parallelizing collections. Encoders handle the
 crucial serialization/deserialization between Scala objects and Spark's internal `Row` format (used by Catalyst),
