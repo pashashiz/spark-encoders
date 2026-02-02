@@ -8,7 +8,7 @@ object V {
   val scala_2_12 = "2.12.20"
   val scala_2_13 = "2.13.16"
   val scala_3 = "3.3.6"
-  val scalaAll: Seq[String] = if (spark != "4.0.1") Seq(scala_2_12, scala_2_13) else Seq(scala_2_13)
+  val scalaAll: Seq[String] = (if (spark != "4.0.1") Seq(scala_2_12, scala_2_13) else Seq(scala_2_13)) :+ scala_3
   val scala: String = scalaAll.head
 
   val magnolia = "1.1.10"
