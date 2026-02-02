@@ -106,7 +106,7 @@ object FiniteDurationEncoder extends TypedEncoder[FiniteDuration] {
       classOf[Duration],
       jvmRepr,
       "fromNanos",
-      Multiply(path, Literal(1000)) :: Nil,
+      new Multiply(path, Literal(1000)) :: Nil,
       returnNullable = false)
   }
 }

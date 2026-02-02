@@ -24,14 +24,13 @@ We plan to remove the Magnolia dependency in the future to make the library even
 
 | Databricks Runtime | Spark Version | JDK Versions  | Scala Versions |
 |--------------------|---------------|---------------|----------------|
-| `12.2` [TBD]       | `3.3.2`       | `1.8`, `1.11` | `2.12`         |
-| `13.3` [TBD]       | `3.4.1`       | `1.8`, `1.11` | `2.12`         |
-| `14.3` [TBD]       | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
-| `15.3` [TBD]       | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
+| `12.2` [DONE]      | `3.3.2`       | `1.8`, `1.11` | `2.12`         |
+| `13.3` [DONE]      | `3.4.1`       | `1.8`, `1.11` | `2.12`         |
+| `14.3` [DONE]      | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
+| `15.3` [DONE]      | `3.5.0`       | `1.8`, `1.11` | `2.12`         |
 | `16.4` [DONE]      | `3.5.2`       | `1.17`        | `2.12`, `2.13` |
-| `17.2` [TBD]       | `4.0.0`       | `1.17`        | `2.13`         |
-
-For now only `16.4` was tested, but more is coming ...
+| `17.3` [DONE]      | `4.0.0`       | `1.17`        | `2.13`         |
+| `18-BETA` [DONE]   | `4.0.0`       | `1.21`        | `2.13`         |
 
 Spark requires an `Encoder[A]` for `Dataset[A]` operations and when parallelizing collections. Encoders handle the
 crucial serialization/deserialization between Scala objects and Spark's internal `Row` format (used by Catalyst),
@@ -90,11 +89,13 @@ types. However, this approach has significant limitations:
 Add the following library dependency using your build tool (e.g., sbt):
 
 Spark `3.x`:
+
 ```scala
 libraryDependencies += "io.github.pashashiz" %% "spark3-encoders" % "0.2.0" // Check latest version
 ```
 
 Spark `4.x`:
+
 ```scala
 libraryDependencies += "io.github.pashashiz" %% "spark4-encoders" % "0.2.0" // Check latest version
 ```
@@ -163,6 +164,49 @@ This will produce the expected output without relying on Spark's reflection-base
 |Pavlo|35 |
 |Randy|45 |
 +-----+---+
+```
+
+**Databricks Notebooks**
+
+In general this library is designed for complex ETL jobs and not the notebooks, however, it works there as well.
+Unfortunately, Databricks does the following preimport for all Scala notebooks:
+
+```scala
+import spark.implicits._
+```
+
+It brings default spark implicit encoders resolution that would conflict with `typedEncoderToEncoder`
+if we just add the following import:
+
+```scala
+import io.github.pashashiz.spark_encoders.TypedEncoder._
+```
+
+The workaround is to add this magic import in enclosed scope and manually derive each encoder like:
+
+```scala
+// notebook cell 1
+
+import org.apache.spark.sql.Encoder
+
+object Encoders {
+
+  import io.github.pashashiz.spark_encoders.TypedEncoder._
+
+  // here we explicitly define User Encoder
+  implicit val userEnc: Encoder[User] = typedEncoderToEncoder[User]
+}
+```
+
+And then we can run:
+
+```scala
+// notebook cell 2
+// this way our encoder has a higher priority than spark built-in
+
+import Encoders._
+
+spark.createDataset[Person](Seq(Person("Pavlo", 35), Person("Randy", 45))).show(false)
 ```
 
 ### ADT Encoder
