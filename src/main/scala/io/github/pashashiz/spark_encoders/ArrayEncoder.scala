@@ -67,7 +67,7 @@ case class ObjectArrayEncoder[A]()(implicit
     MapObjects(
       function = mapElement,
       inputData = path,
-      elementType = elementEncoder.jvmRepr,
+      elementType = elementEncoder.fieldAccessJvmRepr,
       elementNullable = elementEncoder.nullable)
   }
 
@@ -75,7 +75,7 @@ case class ObjectArrayEncoder[A]()(implicit
     // similar to SeqEncoder but no collection type and unwrap array
     Invoke(
       targetObject = MapObjects(
-        function = elementEncoder.fromCatalyst,
+        function = elementEncoder.fromCatalystForField,
         inputData = path,
         elementType = elementEncoder.catalystRepr,
         elementNullable = elementEncoder.nullable),
