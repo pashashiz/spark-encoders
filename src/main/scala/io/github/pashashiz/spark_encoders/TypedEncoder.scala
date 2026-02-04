@@ -22,6 +22,9 @@ abstract class TypedEncoder[A](implicit val classTag: ClassTag[A]) extends Seria
   // used to reconstruct type from catalyst
   def jvmRepr: DataType = ObjectType(runtimeClass)
 
+  // JVM type when accessed as a field (may differ from jvmRepr for value classes due to erasure)
+  def fieldAccessJvmRepr: DataType = jvmRepr
+
   // type inside catalyst
   def catalystRepr: DataType
 
