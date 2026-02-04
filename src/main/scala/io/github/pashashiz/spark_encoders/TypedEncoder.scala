@@ -58,15 +58,25 @@ object TypedEncoder extends TypedEncoderImplicits {
 
   def apply[A: TypedEncoder: ClassTag]: TypedEncoder[A] = implicitly[TypedEncoder[A]]
 
-  def xmap[A: ClassTag, B: ClassTag: TypedEncoder](mapVia: A => B)(
-      contrmapVia: B => A): TypedEncoder[A] = {
+  /** Create an encoder via bidirectional mapping, auto-detecting value classes at runtime */
+  def xmap[A, B: TypedEncoder](mapVia: A => B)(
+      contrmapVia: B => A)(implicit
+      A: ClassTag[A],
+      B: ClassTag[B],
+      vc: IsValueClass[A] = null): TypedEncoder[A] = {
+
+    val isValueClass = vc != null
+
     Shim.cleanClosure(mapVia)
     Shim.cleanClosure(contrmapVia)
-    InvariantEncoder(new Invariant[A, B] {
-      override def map(in: A): B = mapVia(in)
-      override def contrMap(out: B): A = contrmapVia(out)
-    })
+    new InvariantEncoder(
+      new Invariant[A, B] {
+        override def map(in: A): B = mapVia(in)
+        override def contrMap(out: B): A = contrmapVia(out)
+      },
+      isValueClass)
   }
+
 }
 
 trait TypedEncoderImplicits extends Derivation {
