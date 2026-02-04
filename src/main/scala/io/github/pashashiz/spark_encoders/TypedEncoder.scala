@@ -32,6 +32,9 @@ abstract class TypedEncoder[A](implicit val classTag: ClassTag[A]) extends Seria
 
   def fromCatalyst(path: Expression): Expression
 
+  // Deserialize for use as a constructor argument (may differ from fromCatalyst for value classes)
+  def fromCatalystForField(path: Expression): Expression = fromCatalyst(path)
+
   def encoder: ExpressionEncoder[A] =
     Shim.expressionEncoder(this)
 

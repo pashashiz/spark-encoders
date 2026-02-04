@@ -15,11 +15,18 @@ class AnyValEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers
         Baz(Foo("Hello!")) should haveTypedEncoder[Baz]()
       }
 
-      // Note: Top-level Dataset[ValueClass] is challenging due to context-dependent erasure
-      // When boxed in generic containers, value classes retain their wrapper, but Spark's
-      // encoder model doesn't easily support this dual behavior. Consider wrapping in a
-      // case class for Dataset use.
-      "work with top-level value class" ignore {
+      "work with top-level value class" in {
+        // Top-level Dataset[Foo] should work - the schema is the underlying type (String)
+        TypedEncoder[Foo].catalystRepr shouldBe StringType
+
+        val ds = spark.createDataset(Seq(Foo("Hello!")))
+        ds.schema shouldBe StructType(Seq(StructField("value", StringType, nullable = true)))
+        ds.collect().head shouldBe Foo("Hello!")
+
+        // Test that a raw thing would work too
+        val ds2 = spark.createDataset(Seq("Hello!")).as[Foo]
+        ds2.collect().head shouldBe Foo("Hello!")
+
         Foo("Hello!") should haveTypedEncoder[Foo]()
       }
 
