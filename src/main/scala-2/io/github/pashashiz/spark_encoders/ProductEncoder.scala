@@ -5,14 +5,43 @@ import magnolia1.CaseClass
 import org.apache.spark.sql.catalyst.analysis.UnresolvedExtractValue
 import org.apache.spark.sql.catalyst.expressions.objects.{AssertNotNull, Invoke, NewInstance}
 import org.apache.spark.sql.catalyst.expressions.{CreateNamedStruct, Expression, If, IsNull, KnownNotNull, Literal, UpCast}
-import org.apache.spark.sql.types.{DataType, Metadata, StructField, StructType}
+import org.apache.spark.sql.types.{DataType, Metadata, ObjectType, StructField, StructType}
 
 import scala.reflect.ClassTag
 
 object ProductEncoder {
   def apply[A: ClassTag](ctx: CaseClass[TypedEncoder, A]): TypedEncoder[A] =
-    if (ctx.isObject) new CaseObjectEncoder
+    if (ctx.isValueClass) new ValueClassEncoder(ctx)
+    else if (ctx.isObject) new CaseObjectEncoder
     else new CaseClassEncoder(ctx)
+}
+
+class ValueClassEncoder[A](ctx: CaseClass[TypedEncoder, A])(implicit val A: ClassTag[A])
+    extends TypedEncoder[A] {
+
+  private val param = ctx.parameters.head
+  private val underlyingJvmRepr = param.typeclass.jvmRepr
+
+  override def catalystRepr: DataType = param.typeclass.catalystRepr
+
+  // Value classes are erased at field access - report the underlying type
+  override def jvmRepr: DataType = underlyingJvmRepr
+  override def fieldAccessJvmRepr: DataType = underlyingJvmRepr
+
+  override def toCatalyst(path: Expression): Expression = {
+    // When used as a field in a case class, value classes are erased -
+    // the path already contains the underlying value
+    param.typeclass.toCatalyst(path)
+  }
+
+  override def fromCatalyst(path: Expression): Expression = {
+    // Value classes are erased at runtime - just return the underlying value
+    // The JVM will handle the "boxing" transparently since value classes are erased
+    param.typeclass.fromCatalyst(path)
+  }
+
+  override def toString: String = s"ValueClassEncoder($jvmRepr)"
+
 }
 
 class CaseObjectEncoder[A: ClassTag] extends TypedEncoder[A] {
@@ -48,7 +77,8 @@ class CaseClassEncoder[A: ClassTag](ctx: CaseClass[TypedEncoder, A]) extends Typ
         // set KnownNotNull since there is IsNull check SPARK-26730
         targetObject = KnownNotNull(path),
         functionName = param.label,
-        dataType = param.typeclass.jvmRepr,
+        // Use fieldAccessJvmRepr to handle value class erasure
+        dataType = param.typeclass.fieldAccessJvmRepr,
         arguments = Nil,
         // this is required to property generate NPE if result is null
         returnNullable = true)
