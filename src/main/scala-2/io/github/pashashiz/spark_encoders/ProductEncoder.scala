@@ -24,19 +24,39 @@ class ValueClassEncoder[A](ctx: CaseClass[TypedEncoder, A])(implicit val A: Clas
 
   override def catalystRepr: DataType = param.typeclass.catalystRepr
 
-  // Value classes are erased at field access - report the underlying type
-  override def jvmRepr: DataType = underlyingJvmRepr
+  // For top-level use (e.g., Dataset[Foo]), report the boxed type
+  // jvmRepr defaults to ObjectType(A.runtimeClass), which is correct
+
+  // For field access (e.g., baz.foo), value classes are erased to the underlying type
   override def fieldAccessJvmRepr: DataType = underlyingJvmRepr
 
   override def toCatalyst(path: Expression): Expression = {
-    // When used as a field in a case class, value classes are erased -
-    // the path already contains the underlying value
-    param.typeclass.toCatalyst(path)
+    // Handle both contexts:
+    // - Top-level (boxed): path is Foo, need to extract via .value()
+    // - Field access (erased): path is already String
+    // We use the path's dataType to detect which case we're in
+    val underlyingPath = path.dataType match {
+      case ObjectType(cls) if cls == A.runtimeClass =>
+        // Boxed value class - extract the underlying value
+        Invoke(path, param.label, underlyingJvmRepr)
+      case _ =>
+        // Already the underlying type (erased context)
+        path
+    }
+    param.typeclass.toCatalyst(underlyingPath)
   }
 
   override def fromCatalyst(path: Expression): Expression = {
-    // Value classes are erased at runtime - just return the underlying value
-    // The JVM will handle the "boxing" transparently since value classes are erased
+    // For top-level use, box the underlying value into the value class
+    NewInstance(
+      A.runtimeClass,
+      Seq(param.typeclass.fromCatalyst(path)),
+      jvmRepr)
+  }
+
+  override def fromCatalystForField(path: Expression): Expression = {
+    // For field use in case class constructors, return the underlying value
+    // (the parent constructor takes the erased type)
     param.typeclass.fromCatalyst(path)
   }
 
@@ -101,7 +121,8 @@ class CaseClassEncoder[A: ClassTag](ctx: CaseClass[TypedEncoder, A]) extends Typ
         target = param.typeclass.catalystRepr)
       // we do not accept null values in Product types,
       // nullable fields should use Option instead
-      AssertNotNull(param.typeclass.fromCatalyst(paramExpr))
+      // Use fromCatalystForField to handle value class erasure in constructor args
+      AssertNotNull(param.typeclass.fromCatalystForField(paramExpr))
     }
     val newExpr = NewInstance(
       cls = runtimeClass,
