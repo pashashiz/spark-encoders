@@ -20,10 +20,10 @@ class NestedObjectSpec extends SparkAnyWordSpec() with TypedEncoderMatchers
       "work correctly without tuples" in {
         Foo2(
           Some("Hello"),
-          NestedTwo(
-            NestedObject(
-              Some("Hello!")),
-            DoubleNext(1.5))) should haveTypedEncoder[Foo2]()
+          Some(NestedTwo(
+            Some(NestedObject(
+              Some("Hello!"))),
+            Some(DoubleNext(1.5)))))   should haveTypedEncoder[Foo2]()
       }
     }
   }
@@ -35,6 +35,6 @@ object NestedObjectSpec {
   case class DoubleNext(value: Double)
   case class Foo(str: Option[String], nestedObject: (NestedObject, Option[DoubleNext]))
 
-  case class NestedTwo(obj: NestedObject, double: DoubleNext)
-  case class Foo2(str: Option[String], nestedObject: NestedTwo)
+  case class NestedTwo(obj: Option[NestedObject], doubleNezt: Option[DoubleNext])
+  case class Foo2(str: Option[String], nestedObject: Option[NestedTwo])
 }
