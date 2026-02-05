@@ -1,6 +1,6 @@
 package io.github.pashashiz.spark_encoders
 
-import io.github.pashashiz.spark_encoders.expressions.ObjectInstance
+import io.github.pashashiz.spark_encoders.expressions.{AsInstanceOf, ObjectInstance}
 import magnolia1.CaseClass
 import org.apache.spark.sql.catalyst.analysis.UnresolvedExtractValue
 import org.apache.spark.sql.catalyst.expressions.objects.{AssertNotNull, Invoke, NewInstance}
@@ -31,7 +31,7 @@ class ValueClassEncoder[A](ctx: CaseClass[TypedEncoder, A])(implicit val A: Clas
   override def fieldAccessJvmRepr: DataType = underlyingJvmRepr
 
   override def toCatalyst(path: Expression): Expression = {
-    // Handle both contexts:
+    // Handle multiple contexts:
     // - Top-level (boxed): path is Foo, need to extract via .value()
     // - Field access (erased): path is already String
     // We use the path's dataType to detect which case we're in
@@ -79,6 +79,15 @@ class CaseObjectEncoder[A: ClassTag] extends TypedEncoder[A] {
 
 class CaseClassEncoder[A: ClassTag](ctx: CaseClass[TypedEncoder, A]) extends TypedEncoder[A] {
 
+  private def isValueClassEncoder(encoder: TypedEncoder[_]): Boolean = encoder match {
+    case _: ValueClassEncoder[_]      => true
+    case inv: InvariantEncoder[_, _]  => inv.isValueClass
+    case _                            => false
+  }
+
+  private def fieldReturnType(label: String): Class[_] =
+    runtimeClass.getMethod(label).getReturnType
+
   override def catalystRepr: DataType = {
     val fields = ctx.parameters.map { field =>
       StructField(
@@ -93,12 +102,20 @@ class CaseClassEncoder[A: ClassTag](ctx: CaseClass[TypedEncoder, A]) extends Typ
   override def toCatalyst(path: Expression): Expression = {
     val nameExprs = ctx.parameters.map(param => Literal(param.label))
     val valueExprs = ctx.parameters.map { param =>
+      val returnType = fieldReturnType(param.label)
+      val fieldAccessRepr =
+        if (isValueClassEncoder(param.typeclass) && returnType == classOf[Object]) {
+          // Generic value class fields are boxed; use jvmRepr so ValueClassEncoder can unbox.
+          param.typeclass.jvmRepr
+        } else {
+          param.typeclass.fieldAccessJvmRepr
+        }
       val fieldPath = Invoke(
         // set KnownNotNull since there is IsNull check SPARK-26730
         targetObject = KnownNotNull(path),
         functionName = param.label,
         // Use fieldAccessJvmRepr to handle value class erasure
-        dataType = param.typeclass.fieldAccessJvmRepr,
+        dataType = fieldAccessRepr,
         arguments = Nil,
         // this is required to property generate NPE if result is null
         returnNullable = true)
@@ -122,7 +139,15 @@ class CaseClassEncoder[A: ClassTag](ctx: CaseClass[TypedEncoder, A]) extends Typ
       // we do not accept null values in Product types,
       // nullable fields should use Option instead
       // Use fromCatalystForField to handle value class erasure in constructor args
-      AssertNotNull(param.typeclass.fromCatalystForField(paramExpr))
+      val returnType = fieldReturnType(param.label)
+      val decoded =
+        if (isValueClassEncoder(param.typeclass) && returnType == classOf[Object]) {
+          // Generic value class fields expect boxed values.
+          param.typeclass.fromCatalyst(paramExpr)
+        } else {
+          param.typeclass.fromCatalystForField(paramExpr)
+        }
+      AssertNotNull(decoded)
     }
     val newExpr = NewInstance(
       cls = runtimeClass,
