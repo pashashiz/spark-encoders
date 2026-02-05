@@ -14,8 +14,7 @@ trait Invariant[A, B] extends Serializable {
 
 class InvariantEncoder[A, B](
     val invariant: Invariant[A, B],
-    val isValueClass: Boolean
-)(implicit
+    val isValueClass: Boolean)(implicit
     classTag: ClassTag[A],
     invEncoder: TypedEncoder[B])
     extends TypedEncoder[A] {
@@ -76,27 +75,18 @@ class InvariantEncoder[A, B](
 }
 
 object InvariantEncoder {
+
   /** Create an InvariantEncoder, auto-detecting if A is a value class via runtime reflection */
   def apply[A, B](invariant: Invariant[A, B])(implicit
       classTag: ClassTag[A],
-      invEncoder: TypedEncoder[B]
-  ): InvariantEncoder[A, B] = {
+      invEncoder: TypedEncoder[B]): InvariantEncoder[A, B] = {
     // Runtime detection: value classes have a single-parameter constructor matching the target type
     val isValueClass = {
       val constructors = classTag.runtimeClass.getConstructors
       constructors.length == 1 &&
-        constructors.head.getParameterCount == 1 &&
-        constructors.head.getParameterTypes.head == invEncoder.classTag.runtimeClass
+      constructors.head.getParameterCount == 1 &&
+      constructors.head.getParameterTypes.head == invEncoder.classTag.runtimeClass
     }
     new InvariantEncoder(invariant, isValueClass)
-  }
-
-  /** Create an InvariantEncoder for a value class (compile-time verified) */
-  def forValueClass[A, B](invariant: Invariant[A, B])(implicit
-      classTag: ClassTag[A],
-      invEncoder: TypedEncoder[B],
-      isVC: IsValueClass[A]
-  ): InvariantEncoder[A, B] = {
-    new InvariantEncoder(invariant, isValueClass = true)
   }
 }

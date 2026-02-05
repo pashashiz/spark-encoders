@@ -1,6 +1,6 @@
 package io.github.pashashiz.spark_encoders
 
-import io.github.pashashiz.spark_encoders.AnyValEncoderSpec.{Bar, Baz, ContainedSimple, Foo, NonAnyVal, SimpleTypeStr}
+import io.github.pashashiz.spark_encoders.AnyValEncoderSpec.{Bar, Baz, ContainedSimple, Foo, NonAnyVal, SimpleTypeStr, Test}
 import org.apache.spark.sql.types._
 
 class AnyValEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers
@@ -101,6 +101,11 @@ class AnyValEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers
 
         NonAnyVal("Hello!") should haveTypedEncoder[NonAnyVal]()
       }
+
+      "work with type holes" in {
+
+        Test("1", SimpleTypeStr("Hello!")) should haveTypedEncoder[Test[SimpleTypeStr]]()
+      }
     }
   }
 }
@@ -117,4 +122,6 @@ object AnyValEncoderSpec {
   case class ContainedSimple(simple: SimpleTypeStr, bar: Int)
 
   case class NonAnyVal(value: String)
+
+  case class Test[K](id: String, key: K)
 }
