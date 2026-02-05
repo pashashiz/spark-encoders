@@ -63,18 +63,19 @@ object TypedEncoder extends TypedEncoderImplicits {
       contrmapVia: B => A)(implicit
       A: ClassTag[A],
       B: ClassTag[B],
-      vc: IsValueClass[A] = null): TypedEncoder[A] = {
+      vc: IsValueClass[A]): TypedEncoder[A] = {
 
-    val isValueClass = vc != null
+    val isValueClass = vc.isValueClass
 
     Shim.cleanClosure(mapVia)
     Shim.cleanClosure(contrmapVia)
     new InvariantEncoder(
-      new Invariant[A, B] {
+      invariant = new Invariant[A, B] {
         override def map(in: A): B = mapVia(in)
+
         override def contrMap(out: B): A = contrmapVia(out)
       },
-      isValueClass)
+      isValueClass = isValueClass)
   }
 
 }
@@ -127,8 +128,10 @@ trait TypedEncoderImplicits extends Derivation {
   implicit def udt[A >: Null: ClassTag](implicit instance: UserDefinedType[A]): TypedEncoder[A] =
     UDTEncoder(instance)
 
-  def lightExceptionEncoder: TypedEncoder[Throwable] =
+  def lightExceptionEncoder: TypedEncoder[Throwable] = {
+    implicit val throwableNotIsValueClass: IsValueClass[Throwable] = IsValueClass.constantFalse
     TypedEncoder.xmap[Throwable, String](_.getMessage)(LightException(_))
+  }
 
   implicit def eitherEncoder[A: TypedEncoder, B: TypedEncoder]: TypedEncoder[Either[A, B]] =
     InvariantEncoder(new EitherInvariant())
