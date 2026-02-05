@@ -17,7 +17,7 @@ class NestedObjectSpec extends SparkAnyWordSpec() with TypedEncoderMatchers
             Some(DoubleNext(1.5)))) should haveTypedEncoder[Foo]()
       }
 
-      "work correctly without tuples" in {
+      "work correctly with only nullable nested objects" in {
         Foo2(
           Some("Hello"),
           Some(NestedTwo(

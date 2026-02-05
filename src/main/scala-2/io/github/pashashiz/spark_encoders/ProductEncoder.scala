@@ -10,6 +10,18 @@ import org.apache.spark.sql.types.{DataType, Metadata, StructField, StructType}
 import scala.reflect.ClassTag
 
 object ProductEncoder {
+
+  /** Recursively make all nested struct fields nullable for UpCast compatibility.
+    * Spark stores nested structs as nullable by default, so when reading back,
+    * we need the target schema to accept nullable struct fields. */
+  def makeNullable(dt: DataType): DataType = dt match {
+    case st: StructType =>
+      StructType(st.fields.map { f =>
+        f.copy(dataType = makeNullable(f.dataType), nullable = true)
+      })
+    case other => other
+  }
+
   def apply[A: ClassTag](ctx: CaseClass[TypedEncoder, A]): TypedEncoder[A] =
     if (ctx.isObject) new CaseObjectEncoder
     else new CaseClassEncoder(ctx)
@@ -68,7 +80,8 @@ class CaseClassEncoder[A: ClassTag](ctx: CaseClass[TypedEncoder, A]) extends Typ
     val exprs = ctx.parameters.map { param =>
       val paramExpr = UpCast(
         child = UnresolvedExtractValue(child = path, extraction = Literal(param.label)),
-        target = param.typeclass.catalystRepr)
+        // Use makeNullable for nested structs since Spark stores them as nullable by default
+        target = ProductEncoder.makeNullable(param.typeclass.catalystRepr))
       // we do not accept null values in Product types,
       // nullable fields should use Option instead
       AssertNotNull(param.typeclass.fromCatalyst(paramExpr))
