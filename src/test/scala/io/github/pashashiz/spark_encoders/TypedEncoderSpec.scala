@@ -208,6 +208,11 @@ class TypedEncoderSpec extends SparkAnyWordSpec() with TypedEncoderMatchers with
         SimpleTaskOptUser("t1", None) should haveTypedEncoder[SimpleTaskOptUser]()
       }
 
+      "support nested tuples" in {
+        SimpleTaskTuple(("task", SimpleUser("Pablo", 34))) should
+          haveTypedEncoder[SimpleTaskTuple]()
+      }
+
       "gracefully fail when null value used as nested product" in {
         SimpleTaskOptUser("t1", null) should failToSerializeWith[SimpleTaskOptUser](
           _.toLowerCase().contains("null value appeared in non-nullable field")
