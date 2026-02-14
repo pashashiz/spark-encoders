@@ -13,6 +13,7 @@ case class UserOptBoth(name: Option[String], age: Option[Int])
 
 case class SimpleTask(name: String, user: SimpleUser)
 case class SimpleTaskOptUser(name: String, user: Option[SimpleUser])
+case class SimpleTaskTuple(fields: (String, SimpleUser))
 
 sealed trait WorkItem {
   def name: String
@@ -112,6 +113,8 @@ trait SampleEncoders {
   implicit def simpleTaskEncoder: TypedEncoder[SimpleTask] = derive[SimpleTask]
   implicit def simpleTaskOptUserEncoder: TypedEncoder[SimpleTaskOptUser] =
     derive[SimpleTaskOptUser]
+  implicit def simpleTaskWrapperEncoder: TypedEncoder[SimpleTaskTuple] =
+    derive[SimpleTaskTuple]
   implicit def workItemEncoder: TypedEncoder[WorkItem] = derive[WorkItem]
   implicit def workItemDiffTypeEncoder: TypedEncoder[WorkItemDiffType] =
     derive[WorkItemDiffType]

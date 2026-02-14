@@ -57,8 +57,10 @@ class CaseClassEncoder[A: ClassTag](
       case (nameExpr, valueExpr) => nameExpr :: valueExpr :: Nil
     }
     val createExpr = CreateNamedStruct(exprs)
-    val nullExpr = Literal.create(null, createExpr.dataType)
-    If(IsNull(path), nullExpr, createExpr)
+    if (path.nullable)
+      If(IsNull(path), Literal.create(null, createExpr.dataType), createExpr)
+    else
+      createExpr
   }
 
   override def fromCatalyst(path: Expression): Expression = {
@@ -76,8 +78,7 @@ class CaseClassEncoder[A: ClassTag](
       arguments = exprs,
       dataType = jvmRepr,
       propagateNull = true)
-    val nullExpr = Literal.create(null, jvmRepr)
-    If(IsNull(path), nullExpr, newExpr)
+    If(IsNull(path), Literal.create(null, jvmRepr), newExpr)
   }
 
   override def toString: String = s"CaseClassEncoder($jvmRepr)"
