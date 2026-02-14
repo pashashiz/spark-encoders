@@ -46,4 +46,3 @@ object InvariantEncoderSpec {
     implicit val encoder: TypedEncoder[SimpleTypeWithCustomEncoder] = InvariantEncoder(this)
   }
 }
-

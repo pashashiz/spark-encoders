@@ -22,12 +22,18 @@ abstract class TypedEncoder[A](implicit val classTag: ClassTag[A]) extends Seria
   // used to reconstruct type from catalyst
   def jvmRepr: DataType = ObjectType(runtimeClass)
 
+  // JVM type when accessed as a field (may differ from jvmRepr for value classes due to erasure)
+  def fieldAccessJvmRepr: DataType = jvmRepr
+
   // type inside catalyst
   def catalystRepr: DataType
 
   def toCatalyst(path: Expression): Expression
 
   def fromCatalyst(path: Expression): Expression
+
+  // Deserialize for use as a constructor argument (may differ from fromCatalyst for value classes)
+  def fromCatalystForField(path: Expression): Expression = fromCatalyst(path)
 
   def encoder: ExpressionEncoder[A] =
     Shim.expressionEncoder(this)
@@ -52,15 +58,26 @@ object TypedEncoder extends TypedEncoderImplicits {
 
   def apply[A: TypedEncoder: ClassTag]: TypedEncoder[A] = implicitly[TypedEncoder[A]]
 
-  def xmap[A: ClassTag, B: ClassTag: TypedEncoder](mapVia: A => B)(
-      contrmapVia: B => A): TypedEncoder[A] = {
+  /** Create an encoder via bidirectional mapping, auto-detecting value classes at runtime */
+  def xmap[A, B: TypedEncoder](mapVia: A => B)(
+      contrmapVia: B => A)(implicit
+      A: ClassTag[A],
+      B: ClassTag[B],
+      vc: IsValueClass[A]): TypedEncoder[A] = {
+
+    val isValueClass = vc.isValueClass
+
     Shim.cleanClosure(mapVia)
     Shim.cleanClosure(contrmapVia)
-    InvariantEncoder(new Invariant[A, B] {
-      override def map(in: A): B = mapVia(in)
-      override def contrMap(out: B): A = contrmapVia(out)
-    })
+    new InvariantEncoder(
+      invariant = new Invariant[A, B] {
+        override def map(in: A): B = mapVia(in)
+
+        override def contrMap(out: B): A = contrmapVia(out)
+      },
+      isValueClass = isValueClass)
   }
+
 }
 
 trait TypedEncoderImplicits extends Derivation {
@@ -111,8 +128,10 @@ trait TypedEncoderImplicits extends Derivation {
   implicit def udt[A >: Null: ClassTag](implicit instance: UserDefinedType[A]): TypedEncoder[A] =
     UDTEncoder(instance)
 
-  def lightExceptionEncoder: TypedEncoder[Throwable] =
+  def lightExceptionEncoder: TypedEncoder[Throwable] = {
+    implicit val throwableNotIsValueClass: IsValueClass[Throwable] = IsValueClass.constantFalse
     TypedEncoder.xmap[Throwable, String](_.getMessage)(LightException(_))
+  }
 
   implicit def eitherEncoder[A: TypedEncoder, B: TypedEncoder]: TypedEncoder[Either[A, B]] =
     InvariantEncoder(new EitherInvariant())

@@ -45,7 +45,8 @@ class CaseClassEncoder[A: ClassTag](
           // set KnownNotNull since there is IsNull check SPARK-26730
           targetObject = KnownNotNull(path),
           functionName = label,
-          dataType = encoder.jvmRepr,
+          // Use fieldAccessJvmRepr to handle value class erasure
+          dataType = encoder.fieldAccessJvmRepr,
           arguments = Nil,
           // this is required to property generate NPE if result is null
           returnNullable = true)
@@ -71,7 +72,8 @@ class CaseClassEncoder[A: ClassTag](
           target = encoder.catalystRepr)
         // we do not accept null values in Product types,
         // nullable fields should use Option instead
-        AssertNotNull(encoder.fromCatalyst(paramExpr))
+        // Use fromCatalystForField to handle value class erasure in constructor args
+        AssertNotNull(encoder.fromCatalystForField(paramExpr))
     }
     val newExpr = NewInstance(
       cls = runtimeClass,
